@@ -20,6 +20,7 @@
   --review:#8A5200; --review-bg:#FFEFD0; --review-bar:#E39A1B;
   --done:#0F6B3E; --done-bg:#DAF1E5; --done-bar:#23A064;
   --bad:#B42323; --bad-bg:#FDE3E3; --bad-bar:#D84343; --bad-solid:#C23030;
+  --c-open:#2457D6; --c-done:#23A064;
   --shadow:0 1px 2px rgba(18,26,43,.06),0 4px 16px rgba(18,26,43,.05);
   --font-display:'Prompt','IBM Plex Sans Thai',system-ui,'Leelawadee UI',Tahoma,sans-serif;
   --font-body:'IBM Plex Sans Thai','Noto Sans Thai','Leelawadee UI',system-ui,Tahoma,sans-serif;
@@ -35,6 +36,7 @@
     --review:#F0B04A; --review-bg:#3A2D14; --review-bar:#E39A1B;
     --done:#4BC98A; --done-bg:#12352A; --done-bar:#2FB473;
     --bad:#FF8080; --bad-bg:#3E1A1E; --bad-bar:#E65C5C; --bad-solid:#C23030;
+    --c-open:#5B87F0; --c-done:#2AA366;
     --shadow:0 1px 2px rgba(0,0,0,.4),0 4px 16px rgba(0,0,0,.25);
     color-scheme:dark;
   }
@@ -48,6 +50,7 @@
   --review:#F0B04A; --review-bg:#3A2D14; --review-bar:#E39A1B;
   --done:#4BC98A; --done-bg:#12352A; --done-bar:#2FB473;
   --bad:#FF8080; --bad-bg:#3E1A1E; --bad-bar:#E65C5C; --bad-solid:#C23030;
+    --c-open:#5B87F0; --c-done:#2AA366;
   --shadow:0 1px 2px rgba(0,0,0,.4),0 4px 16px rgba(0,0,0,.25);
   color-scheme:dark;
 }
@@ -147,6 +150,39 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)}
 .empty{padding:20px 8px;text-align:center;color:var(--ink-3)}
 .empty .btn{margin-top:10px}
 
+/* charts */
+.charts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:16px}
+.chart-sub{font-size:13px;color:var(--ink-3);margin:-6px 0 14px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--ink-2);margin-bottom:12px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.hbars{display:grid;gap:4px}
+.hrow{display:grid;grid-template-columns:minmax(64px,30%) minmax(0,1fr) 3ch;gap:10px;align-items:center;font-size:14px;padding:5px 6px;margin:0 -6px;border-radius:8px}
+.hrow:hover,.hrow:focus-visible,.col:hover,.col:focus-visible{background:var(--surface-2)}
+.hrow .nm{color:var(--ink-2);overflow-wrap:anywhere;line-height:1.25}
+.hrow .val{font-variant-numeric:tabular-nums;text-align:right;color:var(--ink)}
+.htrack{display:block;height:14px}
+.hfill{display:flex;height:100%;min-width:0}
+.hseg{display:block;height:100%;min-width:4px}
+.hseg+.hseg{margin-left:2px}
+.hseg:last-child{border-radius:0 4px 4px 0}
+.cols{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:6px;height:150px;border-bottom:1px solid var(--line)}
+.col{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;border-radius:8px 8px 0 0;min-width:0}
+.col-v{font-size:13px;font-variant-numeric:tabular-nums;margin-bottom:4px;color:var(--ink)}
+.col-v.zero{color:var(--ink-3)}
+.col-bar{display:block;width:62%;max-width:36px;border-radius:4px 4px 0 0}
+.xlabs{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:6px;margin-top:6px;text-align:center;font-size:12px;line-height:1.25;color:var(--ink-3)}
+.xlabs .x-late{color:var(--bad)}
+.prow{display:grid;gap:5px;padding:5px 6px;margin:0 -6px;border-radius:8px}
+.prow:hover,.prow:focus-visible{background:var(--surface-2)}
+.prow-h{display:flex;justify-content:space-between;gap:10px;font-size:14px}
+.prow-h .nm{color:var(--ink-2);overflow-wrap:anywhere}
+.prow-h .val{font-variant-numeric:tabular-nums;white-space:nowrap}
+.prow .prog>span{background:var(--c-done)}
+.chart-empty{padding:28px 8px;text-align:center;color:var(--ink-3);font-size:14px}
+.chart-foot{margin-top:10px;font-size:13px;color:var(--ink-3)}
+#tip{position:fixed;z-index:80;max-width:260px;background:var(--ink);color:var(--bg);padding:6px 10px;border-radius:8px;font-size:13px;line-height:1.35;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,.25)}
+#tip[hidden]{display:none}
+
 /* calendar */
 .cal-nav{display:flex;align-items:center;gap:4px}
 .cal-title{font-family:var(--font-display);font-weight:600;min-width:130px;text-align:center}
@@ -229,6 +265,9 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)}
   .brand-sub{display:none}
   .user-name,.user-role{display:none}
 }
+@media (max-width:860px){
+  .charts{grid-template-columns:minmax(0,1fr)}
+}
 @media (max-width:640px){
   .tiles{grid-template-columns:repeat(2,1fr)}
   .toolbar{grid-template-columns:1fr}
@@ -268,6 +307,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)}
 <main class="wrap" id="main"><p class="loading">กำลังโหลดข้อมูล…</p></main>
 <div id="modal"></div>
 <div id="toast" role="status" aria-live="polite"></div>
+<div id="tip" role="tooltip" hidden></div>
 
 <script>
 (function () {
@@ -508,6 +548,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)}
   }
 
   function render() {
+    hideTip();
     var keep = document.activeElement;
     var kid = keep && keep.id && keep.closest('#main') ? keep.id : '';
     var ss = kid ? keep.selectionStart : null;
@@ -587,11 +628,163 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)}
       ? '<div class="stack">' + upcoming.map(miniRow).join('') + '</div>'
       : '<p class="empty">ไม่มีงานค้าง ทุกงานเสร็จแล้ว</p>';
 
-    return head + alertHtml + tiles + progress +
+    return head + alertHtml + tiles + progress + chartsHTML() +
       '<div class="dash"><section class="card" aria-labelledby="upT"><div class="card-h"><h2 id="upT">ใกล้ถึงกำหนด</h2>' +
       '<a class="muted" href="#jobs">ดูทั้งหมด</a></div>' + upHtml + '</section>' +
       '<section class="card" aria-labelledby="calT">' + calendarHTML() + '</section></div>';
   }
+
+  /* ----- charts ----- */
+  function chartCard(id, title, sub, body, link) {
+    return '<section class="card" aria-labelledby="' + id + '"><div class="card-h"><h2 id="' + id + '">' + title + '</h2>' + (link || '') + '</div>' +
+      (sub ? '<p class="chart-sub">' + sub + '</p>' : '') + body + '</section>';
+  }
+  function dayMon(d) { return d.getDate() + ' ' + MON_S[d.getMonth()]; }
+  function addDays(d, n) { return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n); }
+
+  /* one horizontal bar row; segs = [{n, color, opacity}] */
+  function hrow(name, segs, max, tip) {
+    var total = segs.reduce(function (a, s) { return a + s.n; }, 0);
+    var w = max && total ? Math.max(total / max * 100, 3) : 0;
+    var fill = segs.filter(function (s) { return s.n > 0; }).map(function (s) {
+      return '<i class="hseg" style="flex:' + s.n + ' 1 0;background:' + s.color + (s.opacity ? ';opacity:' + s.opacity : '') + '"></i>';
+    }).join('');
+    return '<div class="hrow" tabindex="0" role="img" data-tip="' + esc(tip) + '" aria-label="' + esc(tip) + '">' +
+      '<span class="nm">' + esc(name) + '</span>' +
+      '<span class="htrack"><span class="hfill" style="width:' + w + '%">' + fill + '</span></span>' +
+      '<span class="val">' + total + '</span></div>';
+  }
+
+  function weeklyChart() {
+    var t0 = today();
+    var s0 = addDays(t0, -t0.getDay());           // Sunday of this week, same as the calendar
+    var NB = 8;                                   // late | this week | 5 more weeks | later
+    var b = [], i;
+    for (i = 0; i < NB; i++) b.push(0);
+    var open = 0, nodate = 0;
+    jobs.forEach(function (j) {
+      if (!isOpen(j)) return;
+      var d = parseYmd(j.deadline);
+      if (!d) { nodate++; return; }
+      open++;
+      if (d < t0) { b[0]++; return; }
+      var k = Math.floor(Math.round((d - s0) / 86400000) / 7);
+      b[Math.min(k + 1, NB - 1)]++;
+    });
+    var sub = 'งานที่ยังไม่เสร็จ นับตามวันกำหนดส่ง';
+    if (!open) {
+      return chartCard('chWeek', 'กำหนดส่งรายสัปดาห์', sub,
+        '<p class="chart-empty">ไม่มีงานค้างที่ระบุกำหนดส่ง</p>' + (nodate ? '<p class="chart-foot">ไม่ระบุกำหนดส่ง ' + nodate + ' งาน</p>' : ''));
+    }
+    var H = 110, max = Math.max.apply(null, b);
+    var cols = '', labs = '';
+    b.forEach(function (n, idx) {
+      var tip, lab, color = 'var(--c-open)';
+      if (idx === 0) { tip = 'เกินกำหนดแล้ว: ' + n + ' งาน'; lab = '<span class="x-late">เกิน</span>'; color = 'var(--bad-bar)'; }
+      else if (idx === 1) { tip = 'สัปดาห์นี้ (ถึง ' + dayMon(addDays(s0, 6)) + '): ' + n + ' งาน'; lab = '<span>นี้</span>'; }
+      else if (idx === NB - 1) { tip = 'ตั้งแต่ ' + dayMon(addDays(s0, 42)) + ' เป็นต้นไป: ' + n + ' งาน'; lab = '<span>ถัดไป</span>'; }
+      else {
+        var ws = addDays(s0, 7 * (idx - 1));
+        tip = 'สัปดาห์ ' + dayMon(ws) + ' – ' + dayMon(addDays(ws, 6)) + ': ' + n + ' งาน';
+        lab = '<span>' + ws.getDate() + '<br>' + MON_S[ws.getMonth()] + '</span>';
+      }
+      var h = n ? Math.max(4, Math.round(n / max * H)) : 0;
+      cols += '<div class="col" tabindex="0" role="img" data-tip="' + esc(tip) + '" aria-label="' + esc(tip) + '">' +
+        '<span class="col-v' + (n ? '' : ' zero') + '">' + n + '</span>' +
+        (n ? '<span class="col-bar" style="height:' + h + 'px;background:' + color + '"></span>' : '') + '</div>';
+      labs += lab;
+    });
+    return chartCard('chWeek', 'กำหนดส่งรายสัปดาห์', sub,
+      '<div class="cols">' + cols + '</div><div class="xlabs" aria-hidden="true">' + labs + '</div>' +
+      (nodate ? '<p class="chart-foot">ไม่ระบุกำหนดส่ง ' + nodate + ' งาน (ไม่แสดงในกราฟ)</p>' : ''));
+  }
+
+  function ownerChart() {
+    var map = {}, rows = [];
+    jobs.forEach(function (j) {
+      var k = String(j.owner || '').trim() || 'ไม่ระบุ';
+      if (!map[k]) { map[k] = { name: k, open: 0, done: 0, late: 0 }; rows.push(map[k]); }
+      if (j.status === DONE) map[k].done++;
+      else { map[k].open++; if (isLate(j)) map[k].late++; }
+    });
+    rows.sort(function (a, b) { return (b.open + b.done) - (a.open + a.done) || b.open - a.open; });
+    var MAXR = 7;
+    if (rows.length > MAXR + 1) {
+      var rest = rows.slice(MAXR), o = { name: 'อื่นๆ (' + rest.length + ' คน)', open: 0, done: 0, late: 0 };
+      rest.forEach(function (r) { o.open += r.open; o.done += r.done; o.late += r.late; });
+      rows = rows.slice(0, MAXR).concat([o]);
+    }
+    var max = Math.max.apply(null, rows.map(function (r) { return r.open + r.done; }));
+    var legend = '<div class="legend"><span><i style="background:var(--c-open)"></i>ยังไม่เสร็จ</span><span><i style="background:var(--c-done)"></i>เสร็จ</span></div>';
+    var html = rows.map(function (r) {
+      var tip = r.name + ': ยังไม่เสร็จ ' + r.open + ' · เสร็จ ' + r.done + (r.late ? ' · เกินกำหนด ' + r.late : '');
+      return hrow(r.name, [{ n: r.open, color: 'var(--c-open)' }, { n: r.done, color: 'var(--c-done)' }], max, tip);
+    }).join('');
+    return chartCard('chOwner', 'งานตามผู้รับผิดชอบ', 'จำนวนงานทั้งหมดของแต่ละคน', legend + '<div class="hbars">' + html + '</div>');
+  }
+
+  function diffChart() {
+    var open = jobs.filter(isOpen);
+    var sub = 'งานที่ยังไม่เสร็จ แยกตามระดับความยาก';
+    if (!open.length) return chartCard('chDiff', 'ความยากของงานที่ค้าง', sub, '<p class="chart-empty">ไม่มีงานค้าง</p>');
+    var counts = DIFF.map(function () { return 0; }), none = 0;
+    open.forEach(function (j) { var i = DIFF.indexOf(j.difficulty); if (i < 0) none++; else counts[i]++; });
+    var max = Math.max.apply(null, counts.concat([none]));
+    var ops = [0.45, 0.65, 0.85, 1];
+    var html = DIFF.map(function (d, i) {
+      return hrow(d, [{ n: counts[i], color: 'var(--c-open)', opacity: ops[i] }], max, d + ': ' + counts[i] + ' งาน');
+    }).join('');
+    if (none) html += hrow('ไม่ระบุ', [{ n: none, color: 'var(--todo-bar)' }], max, 'ไม่ระบุความยาก: ' + none + ' งาน');
+    return chartCard('chDiff', 'ความยากของงานที่ค้าง', sub, '<div class="hbars">' + html + '</div>');
+  }
+
+  function projectChart() {
+    var byId = {};
+    projects.forEach(function (p) { byId[p.id] = { name: p.name, done: 0, total: 0 }; });
+    var none = { name: 'ไม่ได้อยู่ในโปรเจกต์', done: 0, total: 0 };
+    jobs.forEach(function (j) {
+      var g = byId[j.projectId] || none;
+      g.total++;
+      if (j.status === DONE) g.done++;
+    });
+    var rows = projects.map(function (p) { return byId[p.id]; }).filter(function (g) { return g.total > 0; });
+    if (none.total) rows.push(none);
+    rows.sort(function (a, b) { return (b.total - b.done) - (a.total - a.done); });
+    var link = '<a class="muted" href="#projects">ดูทั้งหมด</a>';
+    var sub = 'งานที่เสร็จแล้วเทียบกับงานทั้งหมด';
+    if (!rows.length) return chartCard('chProj', 'ความคืบหน้าตามโปรเจกต์', sub, '<p class="chart-empty">ยังไม่มีโปรเจกต์</p>', link);
+    var extra = rows.length > 6 ? rows.length - 6 : 0;
+    var html = rows.slice(0, 6).map(function (g) {
+      var pct = Math.round(g.done / g.total * 100);
+      var tip = g.name + ': เสร็จ ' + g.done + ' จาก ' + g.total + ' งาน (' + pct + '%)';
+      return '<div class="prow" tabindex="0" role="img" data-tip="' + esc(tip) + '" aria-label="' + esc(tip) + '">' +
+        '<div class="prow-h"><span class="nm">' + esc(g.name) + '</span><span class="val">' + g.done + '/' + g.total + ' · ' + pct + '%</span></div>' +
+        '<div class="prog"><span style="width:' + pct + '%"></span></div></div>';
+    }).join('');
+    return chartCard('chProj', 'ความคืบหน้าตามโปรเจกต์', sub,
+      '<div class="hbars">' + html + '</div>' + (extra ? '<p class="chart-foot">และอีก ' + extra + ' โปรเจกต์</p>' : ''), link);
+  }
+
+  function chartsHTML() {
+    return '<div class="charts">' + weeklyChart() + ownerChart() + diffChart() + projectChart() + '</div>';
+  }
+
+  /* hover / focus tooltip shared by every chart mark */
+  function tipTarget(n) { return n && n.closest ? n.closest('[data-tip]') : null; }
+  function showTip(el) {
+    var t = $('#tip');
+    if (!t || !el) return;
+    t.textContent = el.getAttribute('data-tip') || '';
+    t.hidden = false;
+    var r = el.getBoundingClientRect();
+    var w = t.offsetWidth, h = t.offsetHeight;
+    var x = Math.min(Math.max(8, r.left + r.width / 2 - w / 2), window.innerWidth - w - 8);
+    var y = r.top - h - 8;
+    if (y < 8) y = r.bottom + 8;
+    t.style.left = x + 'px';
+    t.style.top = y + 'px';
+  }
+  function hideTip() { var t = $('#tip'); if (t) t.hidden = true; }
 
   function calendarHTML() {
     var y = ui.calY, m = ui.calM;
@@ -973,6 +1166,13 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)}
     ui.view = VIEWS.indexOf(h) >= 0 ? h : 'dashboard';
     render();
   }
+  document.addEventListener('pointerover', function (e) { var el = tipTarget(e.target); if (el) showTip(el); });
+  document.addEventListener('pointerout', function (e) { if (tipTarget(e.target)) hideTip(); });
+  document.addEventListener('focusin', function (e) { var el = tipTarget(e.target); if (el) showTip(el); });
+  document.addEventListener('focusout', function (e) { if (tipTarget(e.target)) hideTip(); });
+  document.addEventListener('pointerdown', function (e) { if (!tipTarget(e.target)) hideTip(); });
+  window.addEventListener('scroll', hideTip, true);
+  window.addEventListener('resize', hideTip);
   window.addEventListener('hashchange', route);
 
   /* ---------- start ---------- */
