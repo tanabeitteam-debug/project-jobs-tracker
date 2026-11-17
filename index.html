@@ -151,13 +151,18 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)}
 .empty .btn{margin-top:10px}
 
 /* add chooser */
-.types{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
-.type-card{text-align:left;display:grid;gap:6px;align-content:start;padding:14px 16px;border:1px solid var(--line);border-radius:12px;background:var(--surface);font:inherit;color:inherit;cursor:pointer}
+.types{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px}
+.type-card{display:flex;align-items:center;justify-content:center;min-height:76px;padding:14px 16px;border:1px solid var(--line);border-radius:12px;background:var(--surface);font:inherit;color:inherit;cursor:pointer}
 .type-card:hover{background:var(--surface-2);border-color:var(--accent)}
+.type-card.urgent{border-left:4px solid var(--bad-bar)}
+.type-card.urgent:hover{border-color:var(--bad-bar)}
 .type-card:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .type-card b{font-family:var(--font-display);font-size:18px;font-weight:600}
-.type-card span{font-size:13px;color:var(--ink-2);line-height:1.5}
 .opt{font-weight:400;color:var(--ink-3)}
+.urg{display:inline-block;margin-left:8px;padding:1px 9px;border-radius:999px;font-size:12px;font-weight:600;line-height:1.5;color:var(--bad);background:var(--bad-bg);vertical-align:2px;white-space:nowrap}
+.alert.warn{background:var(--review-bg);color:var(--review);border-left-color:var(--review-bar)}
+.seg.two{grid-template-columns:repeat(2,1fr)}
+.seg-o input[value="ด่วน"]:checked+span{background:var(--bad-solid);border-color:var(--bad-solid);color:#fff}
 
 /* charts */
 .charts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:16px}
@@ -333,6 +338,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)}
   var STATUS_CLS = {};
   STATUS.forEach(function (s) { STATUS_CLS[s.key] = s.cls; });
   var DONE = 'เสร็จ';
+  var URGENT = 'ด่วน';
   var DIFF = ['ง่าย', 'ปานกลาง', 'ยาก', 'ยากมาก'];
   var MON_S = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
   var MON_L = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
@@ -392,6 +398,8 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)}
     return String(s || '').split(/[,،、]/).map(function (x) { return x.trim(); }).filter(Boolean);
   }
   function isOpen(j) { return j.status !== DONE; }
+  function isUrgent(j) { var u = String(j.urgent == null ? '' : j.urgent).trim(); return u !== '' && u !== '0'; }
+  function urgBadge(j) { return isUrgent(j) && isOpen(j) ? '<span class="urg">ด่วน</span>' : ''; }
   function isLate(j) { var d = daysLeft(j.deadline); return isOpen(j) && d !== null && d < 0; }
   function countdown(j) {
     if (j.status === DONE) return 'เสร็จแล้ว';
@@ -598,7 +606,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)}
   function miniRow(j) {
     var p = projName(j.projectId);
     return '<button type="button" class="mini u-' + urgency(j) + '" data-action="edit-job" data-id="' + esc(j.id) + '">' +
-      '<span class="mini-t"><b>' + esc(j.title) + '</b><span>' + esc(p || 'ไม่มีโปรเจกต์') + ' · ' + esc(j.owner || 'ยังไม่ระบุผู้รับผิดชอบ') + '</span></span>' +
+      '<span class="mini-t"><b>' + esc(j.title) + urgBadge(j) + '</b><span>' + esc(p || 'ไม่มีโปรเจกต์') + ' · ' + esc(j.owner || 'ยังไม่ระบุผู้รับผิดชอบ') + '</span></span>' +
       '<span class="due">' + fmtDate(j.deadline) + '<br>' + countdown(j) + '</span></button>';
   }
 
@@ -625,6 +633,12 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)}
         '<button type="button" class="btn" data-action="go-status" data-status="late">ดูงานที่เกินกำหนด</button></div>'
       : '';
 
+    var urgent = jobs.filter(function (j) { return isUrgent(j) && isOpen(j); });
+    var urgentHtml = urgent.length
+      ? '<div class="alert warn"><span>มีงานด่วน ' + urgent.length + ' งาน: ' + esc(urgent.slice(0, 3).map(function (j) { return j.title; }).join(', ')) + (urgent.length > 3 ? ' และอีก ' + (urgent.length - 3) + ' งาน' : '') + '</span>' +
+        '<button type="button" class="btn" data-action="go-status" data-status="urgent">ดูงานด่วน</button></div>'
+      : '';
+
     var tiles = '<div class="tiles">' + STATUS.map(function (s) {
       return '<button type="button" class="tile" style="--c:var(--' + s.cls + '-bar)" data-action="go-status" data-status="' + s.key + '">' +
         '<div class="tile-num">' + counts[s.key] + '</div><div class="tile-label">' + s.key + '</div></button>';
@@ -633,12 +647,12 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)}
     var progress = '<div class="card"><div class="prog-row"><span>ความคืบหน้ารวม</span><span>เสร็จ ' + done + ' จาก ' + jobs.length + ' งาน · ' + pct + '%</span></div>' +
       '<div class="prog" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pct + '" aria-label="ความคืบหน้ารวม"><span style="width:' + pct + '%"></span></div></div>';
 
-    var upcoming = jobs.filter(isOpen).sort(byDeadline).slice(0, 6);
+    var upcoming = jobs.filter(isOpen).sort(function (a, b) { return (isUrgent(b) - isUrgent(a)) || byDeadline(a, b); }).slice(0, 6);
     var upHtml = upcoming.length
       ? '<div class="stack">' + upcoming.map(miniRow).join('') + '</div>'
       : '<p class="empty">ไม่มีงานค้าง ทุกงานเสร็จแล้ว</p>';
 
-    return head + alertHtml + tiles + progress + chartsHTML() +
+    return head + alertHtml + urgentHtml + tiles + progress + chartsHTML() +
       '<div class="dash"><section class="card" aria-labelledby="upT"><div class="card-h"><h2 id="upT">ใกล้ถึงกำหนด</h2>' +
       '<a class="muted" href="#jobs">ดูทั้งหมด</a></div>' + upHtml + '</section>' +
       '<section class="card" aria-labelledby="calT">' + calendarHTML() + '</section></div>';
@@ -835,13 +849,14 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)}
     var q = ui.q.trim().toLowerCase();
     var l = jobs.filter(function (j) {
       if (ui.status === 'late') { if (!isLate(j)) return false; }
+      else if (ui.status === 'urgent') { if (!(isUrgent(j) && isOpen(j))) return false; }
       else if (ui.status !== 'all' && j.status !== ui.status) return false;
       if (ui.project !== 'all') {
         var pid = j.projectId || '';
         if (ui.project === 'none' ? pid !== '' : pid !== ui.project) return false;
       }
       if (q) {
-        var hay = [j.title, j.owner, j.collaborators, j.note, projName(j.projectId)].join(' ').toLowerCase();
+        var hay = [j.title, j.owner, j.collaborators, j.note, projName(j.projectId), isUrgent(j) ? URGENT : ''].join(' ').toLowerCase();
         if (hay.indexOf(q) < 0) return false;
       }
       return true;
@@ -860,7 +875,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)}
     var p = projById(j.projectId);
     return '<article class="job u-' + u + '">' +
       '<div class="job-main">' +
-        '<h3 class="job-title">' + esc(j.title) + '</h3>' +
+        '<h3 class="job-title">' + esc(j.title) + urgBadge(j) + '</h3>' +
         '<div class="job-proj">' + (p ? esc(p.name) : 'ไม่มีโปรเจกต์') + '</div>' +
         '<div class="job-meta">' +
           '<span><span class="k">ผู้รับผิดชอบ</span> <b>' + esc(j.owner || '–') + '</b></span>' +
@@ -886,6 +901,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)}
       return { k: s.key, label: s.key, n: jobs.filter(function (j) { return j.status === s.key; }).length };
     }));
     chips.push({ k: 'late', label: 'เกินกำหนด', n: late });
+    chips.push({ k: 'urgent', label: 'ด่วน', n: jobs.filter(function (j) { return isUrgent(j) && isOpen(j); }).length });
     var chipHtml = '<div class="chips" role="group" aria-label="กรองตามสถานะ">' + chips.map(function (c) {
       return '<button type="button" class="fchip" data-action="filter-status" data-status="' + c.k + '" aria-pressed="' + (ui.status === c.k) + '">' + c.label + ' <span class="n">' + c.n + '</span></button>';
     }).join('') + '</div>';
@@ -978,17 +994,16 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)}
   function openTypeChooser() {
     openModal('<h2 id="mT">เพิ่มอะไร?</h2>' +
       '<div class="types">' +
-        '<button type="button" class="type-card" data-action="add-job" data-first>' +
-          '<b>งาน</b><span>ชิ้นงานที่ต้องทำ มีผู้รับผิดชอบและกำหนดส่ง เช่น ScanBarcode TDK<br>เป็นงานเดี่ยว หรือใส่ไว้ในโปรเจกต์ก็ได้</span></button>' +
-        '<button type="button" class="type-card" data-action="add-project">' +
-          '<b>โปรเจกต์</b><span>กลุ่มงานใหญ่ที่รวมหลายงานย่อยไว้ด้วยกัน เช่น ติดตั้งสายแลนและคอมพิวเตอร์ Line QC ZN</span></button>' +
+        '<button type="button" class="type-card" data-action="add-job" data-first><b>งานทั่วไป</b></button>' +
+        '<button type="button" class="type-card urgent" data-action="add-job" data-urgent="1"><b>งานด่วน</b></button>' +
+        '<button type="button" class="type-card" data-action="add-project"><b>โปรเจกต์</b></button>' +
       '</div>' +
       '<div class="actions"><button type="button" class="btn" data-action="close-modal">ยกเลิก</button></div>');
   }
 
-  function openJobModal(job, presetProject) {
-    var d = today(); d.setDate(d.getDate() + 7);
-    var j = job || { title: '', projectId: presetProject || '', owner: '', collaborators: '', deadline: ymd(d), difficulty: 'ปานกลาง', status: 'รอทำ', note: '' };
+  function openJobModal(job, presetProject, asUrgent) {
+    var d = today(); d.setDate(d.getDate() + (asUrgent ? 1 : 7));
+    var j = job || { title: '', projectId: presetProject || '', owner: '', collaborators: '', deadline: ymd(d), difficulty: 'ปานกลาง', status: 'รอทำ', note: '', urgent: asUrgent ? URGENT : '' };
     var names = [];
     jobs.forEach(function (x) {
       [x.owner].concat(splitList(x.collaborators)).forEach(function (n) { if (n && names.indexOf(n) < 0) names.push(n); });
@@ -1004,6 +1019,10 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)}
     openModal('<h2 id="mT">' + (job ? 'แก้ไขงาน' : 'เพิ่มงานใหม่') + '</h2>' +
       '<form id="jobForm" data-id="' + esc(job ? job.id : '') + '" novalidate>' +
         '<div class="field"><label for="f-title">ชื่องาน <span class="req">*</span></label><input type="text" id="f-title" data-first value="' + esc(j.title) + '" maxlength="200" placeholder="เช่น ScanBarcode TDK"><div class="err" id="e-title" aria-live="polite"></div></div>' +
+        '<div class="field" role="radiogroup" aria-labelledby="l-type"><span class="lbl" id="l-type">ประเภทงาน</span><div class="seg two">' +
+          '<label class="seg-o"><input type="radio" name="urg" value=""' + (isUrgent(j) ? '' : ' checked') + '><span>งานทั่วไป</span></label>' +
+          '<label class="seg-o"><input type="radio" name="urg" value="' + URGENT + '"' + (isUrgent(j) ? ' checked' : '') + '><span>งานด่วน</span></label>' +
+        '</div></div>' +
         '<div class="field"><label for="f-project">อยู่ในโปรเจกต์ <span class="opt">(ไม่บังคับ)</span></label><select class="f" id="f-project">' + projOpts + '</select><div class="hint">เลือกเมื่องานนี้เป็นส่วนหนึ่งของโปรเจกต์ ถ้าเป็นงานเดี่ยวปล่อยไว้ตามเดิม</div></div>' +
         '<div class="two">' +
           '<div class="field"><label for="f-owner">ผู้รับผิดชอบ</label><input type="text" id="f-owner" list="dl-names" value="' + esc(j.owner) + '" maxlength="80" placeholder="เช่น IT"></div>' +
@@ -1042,6 +1061,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)}
       difficulty: diffEl ? diffEl.value : 'ปานกลาง',
       status: status,
       note: $('#f-note').value.trim(),
+      urgent: (form.querySelector('input[name="urg"]:checked') || {}).value || '',
       createdAt: existing && existing.createdAt ? existing.createdAt : new Date().toISOString(),
       doneAt: status === DONE ? ((existing && existing.doneAt) || new Date().toISOString()) : ''
     };
@@ -1100,7 +1120,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)}
     else if (a === 'filter-status') { ui.status = el.getAttribute('data-status'); render(); }
     else if (a === 'clear-filters') { ui.status = 'all'; ui.project = 'all'; ui.q = ''; render(); }
     else if (a === 'add') openTypeChooser();
-    else if (a === 'add-job') openJobModal(null, el.getAttribute('data-project') || '');
+    else if (a === 'add-job') openJobModal(null, el.getAttribute('data-project') || '', el.getAttribute('data-urgent') === '1');
     else if (a === 'edit-job') { var j = findJob(id); if (j) openJobModal(j); }
     else if (a === 'del-job') {
       var dj = findJob(id);
