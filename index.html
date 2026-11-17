@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Project &amp; Jobs Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&family=Prompt:wght@500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: sticky top bar with three tabs, one centered column of white cards on a cool grey ground.
+   Status colors are semantic (todo / doing / review / done / late) and always paired with a text label. */
+:root{
+  --bg:#F2F4F9; --surface:#FFFFFF; --surface-2:#EDF0F6;
+  --ink:#121A2B; --ink-2:#434D66; --ink-3:#5B6681; --line:#DCE1EB;
+  --accent:#2457D6; --accent-ink:#FFFFFF; --accent-soft:#E3EBFC;
+  --todo:#5B6681; --todo-bg:#E9ECF3; --todo-bar:#8E99B3;
+  --doing:#2457D6; --doing-bg:#E3EBFC; --doing-bar:#2457D6;
+  --review:#8A5200; --review-bg:#FFEFD0; --review-bar:#E39A1B;
+  --done:#0F6B3E; --done-bg:#DAF1E5; --done-bar:#23A064;
+  --bad:#B42323; --bad-bg:#FDE3E3; --bad-bar:#D84343; --bad-solid:#C23030;
+  --shadow:0 1px 2px rgba(18,26,43,.06),0 4px 16px rgba(18,26,43,.05);
+  --font-display:'Prompt','IBM Plex Sans Thai',system-ui,'Leelawadee UI',Tahoma,sans-serif;
+  --font-body:'IBM Plex Sans Thai','Noto Sans Thai','Leelawadee UI',system-ui,Tahoma,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1422; --surface:#161E31; --surface-2:#1D2740;
+    --ink:#E8ECF6; --ink-2:#B0BAD2; --ink-3:#8F9AB5; --line:#28324C;
+    --accent:#6C97FF; --accent-ink:#0E1422; --accent-soft:#1F2D52;
+    --todo:#A3AEC8; --todo-bg:#232C44; --todo-bar:#6B7694;
+    --doing:#7FA3FF; --doing-bg:#1F2D52; --doing-bar:#6C97FF;
+    --review:#F0B04A; --review-bg:#3A2D14; --review-bar:#E39A1B;
+    --done:#4BC98A; --done-bg:#12352A; --done-bar:#2FB473;
+    --bad:#FF8080; --bad-bg:#3E1A1E; --bad-bar:#E65C5C; --bad-solid:#C23030;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 4px 16px rgba(0,0,0,.25);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1422; --surface:#161E31; --surface-2:#1D2740;
+  --ink:#E8ECF6; --ink-2:#B0BAD2; --ink-3:#8F9AB5; --line:#28324C;
+  --accent:#6C97FF; --accent-ink:#0E1422; --accent-soft:#1F2D52;
+  --todo:#A3AEC8; --todo-bg:#232C44; --todo-bar:#6B7694;
+  --doing:#7FA3FF; --doing-bg:#1F2D52; --doing-bar:#6C97FF;
+  --review:#F0B04A; --review-bg:#3A2D14; --review-bar:#E39A1B;
+  --done:#4BC98A; --done-bg:#12352A; --done-bar:#2FB473;
+  --bad:#FF8080; --bad-bg:#3E1A1E; --bad-bar:#E65C5C; --bad-solid:#C23030;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 4px 16px rgba(0,0,0,.25);
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.55 var(--font-body);-webkit-text-size-adjust:100%}
+h1,h2,h3,p{margin:0}
+h1,h2,h3{font-family:var(--font-display);font-weight:600;line-height:1.3;text-wrap:balance}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+.muted{color:var(--ink-3)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* top bar */
+.top{background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
+.top-in{max-width:1120px;margin:0 auto;padding:10px 16px;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px 24px}
+.brand{display:flex;gap:10px;align-items:center;min-width:0}
+.mark{width:36px;height:36px;border-radius:10px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;flex:none}
+.brand-name{font-family:var(--font-display);font-weight:600;font-size:17px;line-height:1.2}
+.brand-sub{font-size:12px;color:var(--ink-3)}
+#nav{display:flex;gap:4px}
+#nav a{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:9px;color:var(--ink-2);text-decoration:none;font-weight:500;white-space:nowrap}
+#nav a:hover{background:var(--surface-2)}
+#nav a[aria-current="page"]{background:var(--accent-soft);color:var(--accent)}
+.badge{min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--bad-solid);color:#fff;font-size:11px;font-weight:600;display:inline-grid;place-items:center;font-variant-numeric:tabular-nums}
+.user{display:flex;align-items:center;gap:10px}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:600;font-family:var(--font-display)}
+.user-name{font-size:14px;font-weight:500;line-height:1.2}
+.user-role{font-size:12px;color:var(--ink-3)}
+#banner:not(:empty){background:var(--review-bg);color:var(--review);padding:8px 16px;text-align:center;font-size:14px}
+
+.wrap{max-width:1120px;margin:0 auto;padding:20px 16px 80px}
+.page-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.page-head h1{font-size:24px}
+.page-head .sub{color:var(--ink-3);font-size:14px;margin-top:2px}
+.loading{padding:48px 0;text-align:center;color:var(--ink-3)}
+
+/* buttons and controls */
+.btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);padding:8px 14px;border-radius:9px;font-weight:500;min-height:38px;line-height:1.2}
+.btn:hover{background:var(--surface-2)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.danger{background:var(--bad-solid);border-color:var(--bad-solid);color:#fff}
+.btn[disabled]{opacity:.6;cursor:default}
+.icon-btn{width:34px;height:34px;border-radius:8px;border:1px solid transparent;background:transparent;display:inline-grid;place-items:center;color:var(--ink-3)}
+.icon-btn:hover{background:var(--surface-2);color:var(--ink)}
+.icon-btn.del:hover{color:var(--bad)}
+input[type=text],input[type=search],input[type=date],input[type=password],select.f,textarea{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:9px 12px;min-height:40px}
+textarea{resize:vertical;min-height:72px}
+input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+
+/* pills */
+.pill{display:inline-flex;align-items:center;gap:6px;padding:2px 10px;border-radius:999px;font-size:13px;font-weight:500;white-space:nowrap}
+.pill::before{content:'';width:7px;height:7px;border-radius:50%;background:currentColor}
+.pill.todo,.selwrap.todo select{color:var(--todo);background:var(--todo-bg)}
+.pill.doing,.selwrap.doing select{color:var(--doing);background:var(--doing-bg)}
+.pill.review,.selwrap.review select{color:var(--review);background:var(--review-bg)}
+.pill.done,.selwrap.done select{color:var(--done);background:var(--done-bg)}
+.selwrap{position:relative;display:inline-block}
+.selwrap.todo{color:var(--todo)}.selwrap.doing{color:var(--doing)}.selwrap.review{color:var(--review)}.selwrap.done{color:var(--done)}
+.selwrap select{appearance:none;-webkit-appearance:none;border:0;border-radius:999px;padding:4px 30px 4px 12px;font-size:13px;font-weight:500;min-height:30px;cursor:pointer}
+.selwrap select option{color:var(--ink);background:var(--surface)}
+.selwrap::after{content:'';position:absolute;right:12px;top:50%;width:6px;height:6px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:translateY(-70%) rotate(45deg);pointer-events:none}
+.chip{display:inline-block;padding:0 8px;border-radius:6px;background:var(--surface-2);color:var(--ink-2);font-size:13px;font-weight:500}
+
+/* urgency */
+.u-late{--bar:var(--bad-bar)}.u-soon{--bar:var(--review-bar)}.u-week{--bar:var(--accent)}.u-ok{--bar:var(--todo-bar)}.u-done{--bar:var(--done-bar)}
+.dot.u-late{background:var(--bad-bar)}.dot.u-soon{background:var(--review-bar)}.dot.u-week{background:var(--accent)}.dot.u-ok{background:var(--todo-bar)}.dot.u-done{background:var(--done-bar)}
+.due{font-size:14px;color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap}
+.u-late .due{color:var(--bad);font-weight:600}
+.u-soon .due{color:var(--review);font-weight:600}
+.u-done .due{color:var(--done)}
+
+/* dashboard */
+.alert{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--bad-bg);color:var(--bad);border-left:4px solid var(--bad-bar);border-radius:10px;padding:10px 14px;margin-bottom:12px;font-weight:500}
+.alert .btn{margin-left:auto;min-height:32px;padding:4px 12px}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px}
+.tile{position:relative;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px 14px 22px;box-shadow:var(--shadow);width:100%}
+.tile::before{content:'';position:absolute;left:0;top:12px;bottom:12px;width:4px;border-radius:0 4px 4px 0;background:var(--c)}
+.tile:hover{background:var(--surface-2)}
+.tile-num{font-family:var(--font-display);font-size:30px;font-weight:600;line-height:1.1;font-variant-numeric:tabular-nums}
+.tile-label{font-size:14px;color:var(--ink-2)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:var(--shadow)}
+.card-h{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px}
+.card-h h2{font-size:16px}
+.prog{height:8px;background:var(--surface-2);border-radius:99px;overflow:hidden}
+.prog>span{display:block;height:100%;background:var(--done-bar);border-radius:99px;min-width:0}
+.prog-row{display:flex;justify-content:space-between;font-size:14px;margin-bottom:8px;font-variant-numeric:tabular-nums}
+.dash{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:16px;margin-top:16px;align-items:start}
+.stack{display:grid;gap:8px}
+.mini{display:flex;gap:12px;align-items:center;justify-content:space-between;text-align:left;width:100%;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--bar);border-radius:10px;padding:10px 12px}
+.mini:hover{background:var(--surface-2)}
+.mini-t{min-width:0}
+.mini-t b{display:block;font-weight:500;overflow-wrap:anywhere}
+.mini-t span{font-size:13px;color:var(--ink-3)}
+.empty{padding:20px 8px;text-align:center;color:var(--ink-3)}
+.empty .btn{margin-top:10px}
+
+/* calendar */
+.cal-nav{display:flex;align-items:center;gap:4px}
+.cal-title{font-family:var(--font-display);font-weight:600;min-width:130px;text-align:center}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.dow{text-align:center;font-size:12px;color:var(--ink-3);padding:4px 0}
+.day{aspect-ratio:1/.85;border:1px solid transparent;background:transparent;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-variant-numeric:tabular-nums;padding:0}
+.day:hover{background:var(--surface-2)}
+.day.today{border-color:var(--accent)}
+.day.sel{background:var(--accent);color:var(--accent-ink)}
+.dots{display:flex;gap:3px;height:6px}
+.dot{width:6px;height:6px;border-radius:50%;display:block}
+.day.sel .dot{background:var(--accent-ink)}
+.day-list{margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+.day-list h3{font-size:14px;margin-bottom:8px;color:var(--ink-2);font-family:var(--font-body);font-weight:600}
+
+/* jobs */
+.toolbar{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) minmax(0,1fr);gap:10px;margin-bottom:10px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.fchip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 14px;font-size:14px;font-weight:500;color:var(--ink-2);display:inline-flex;gap:8px;align-items:center}
+.fchip:hover{background:var(--surface-2)}
+.fchip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.fchip .n{font-variant-numeric:tabular-nums;opacity:.85}
+.job{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px 20px;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--bar);border-radius:12px;padding:12px 14px 12px 16px;box-shadow:var(--shadow)}
+.job-title{font-size:16px;overflow-wrap:anywhere}
+.job-proj{font-size:13px;color:var(--ink-3);margin-bottom:6px;overflow-wrap:anywhere}
+.job-meta{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:14px;align-items:center}
+.job-meta .k{font-size:12px;color:var(--ink-3);margin-right:2px}
+.job-note{margin-top:8px;font-size:14px;color:var(--ink-2);overflow-wrap:anywhere;white-space:pre-wrap}
+.job-side{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.job-actions{display:flex;gap:2px}
+.diff{display:inline-flex;align-items:center;gap:3px}
+.diff i{width:6px;height:14px;border-radius:2px;background:var(--line)}
+.diff i.on{background:var(--ink-2)}
+.diff span{margin-left:5px;font-size:13px;color:var(--ink-2)}
+.list{display:grid;gap:10px}
+
+/* projects */
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.proj h2{font-size:17px;overflow-wrap:anywhere}
+.proj .note{font-size:14px;color:var(--ink-3);margin-top:2px;overflow-wrap:anywhere}
+.proj .prog{margin:12px 0 6px}
+.proj-stats{font-size:13px;color:var(--ink-2);margin-bottom:12px;font-variant-numeric:tabular-nums}
+.proj-jobs{list-style:none;margin:0 0 12px;padding:0;display:grid;gap:6px}
+.proj-jobs li{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;background:var(--surface-2);font-size:14px}
+.proj-jobs li b{font-weight:500;overflow-wrap:anywhere}
+.proj-jobs .r{display:flex;gap:10px;align-items:center;flex:none}
+
+/* modal */
+.overlay{position:fixed;inset:0;background:rgba(10,16,30,.55);display:grid;place-items:center;padding:16px;z-index:50;overflow:auto}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;width:min(580px,100%);max-height:calc(100vh - 32px);overflow:auto;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.panel h2{font-size:19px;margin-bottom:16px}
+.field{display:grid;gap:6px;margin-bottom:14px}
+.field>label,.lbl{font-weight:500;font-size:14px}
+.req{color:var(--bad)}
+.hint{font-size:12px;color:var(--ink-3)}
+.err{font-size:13px;color:var(--bad);min-height:0}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
+.seg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.seg-o{position:relative;display:block}
+.seg-o input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.seg-o span{display:block;text-align:center;padding:8px 4px;border:1px solid var(--line);border-radius:9px;font-size:14px;font-weight:500;background:var(--surface)}
+.seg-o input:checked+span{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.seg-o input:focus-visible+span{outline:2px solid var(--accent);outline-offset:2px}
+.actions{display:flex;justify-content:flex-end;gap:8px;margin-top:6px;flex-wrap:wrap}
+#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:10px;font-size:14px;z-index:60;box-shadow:0 8px 24px rgba(0,0,0,.3);opacity:0;pointer-events:none;transition:opacity .2s}
+#toast.show{opacity:1}
+
+.lock{max-width:380px;margin:48px auto}
+.lock h1{font-size:20px;margin-bottom:4px}
+.lock .sub{color:var(--ink-3);font-size:14px;margin-bottom:16px}
+.is-locked .user{display:none}
+
+@media (max-width:860px){
+  .dash{grid-template-columns:1fr}
+  .grid2{grid-template-columns:1fr}
+}
+@media (max-width:720px){
+  .top-in{grid-template-columns:1fr auto}
+  #nav{grid-column:1/-1;order:3;overflow-x:auto}
+  .brand-sub{display:none}
+  .user-name,.user-role{display:none}
+}
+@media (max-width:640px){
+  .tiles{grid-template-columns:repeat(2,1fr)}
+  .toolbar{grid-template-columns:1fr}
+  .job{grid-template-columns:1fr}
+  .job-side{flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:space-between}
+  .two{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-in">
+    <div class="brand">
+      <span class="mark" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10.5l4 4 8-9"/></svg>
+      </span>
+      <div>
+        <div class="brand-name">Project &amp; Jobs Tracker</div>
+        <div class="brand-sub">ระบบจัดการโปรเจกต์และงานประจำวัน</div>
+      </div>
+    </div>
+    <nav id="nav" aria-label="เมนูหลัก"></nav>
+    <div class="user">
+      <span class="avatar" aria-hidden="true">N</span>
+      <div>
+        <div class="user-name">Nattira Tharator</div>
+        <div class="user-role">Admin</div>
+      </div>
+      <button type="button" class="icon-btn" data-action="lock" aria-label="ล็อกหน้าจอ" title="ล็อกหน้าจอ">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="10" height="6.5" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 015 0v2"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+<div id="banner" role="status"></div>
+<main class="wrap" id="main"><p class="loading">กำลังโหลดข้อมูล…</p></main>
+<div id="modal"></div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ---------- constants ---------- */
+  var STATUS = [
+    { key: 'รอทำ', cls: 'todo' },
+    { key: 'กำลังทำ', cls: 'doing' },
+    { key: 'รอตรวจ', cls: 'review' },
+    { key: 'เสร็จ', cls: 'done' }
+  ];
+  var STATUS_CLS = {};
+  STATUS.forEach(function (s) { STATUS_CLS[s.key] = s.cls; });
+  var DONE = 'เสร็จ';
+  var DIFF = ['ง่าย', 'ปานกลาง', 'ยาก', 'ยากมาก'];
+  var MON_S = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+  var MON_L = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+  var DOW = ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'];
+  var VIEWS = ['dashboard', 'jobs', 'projects'];
+
+  var ICON = {
+    plus: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M8 3v10M3 8h10"/></svg>',
+    edit: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 13.5l.7-3L11 2.7a1.4 1.4 0 012 2L5.2 12.8l-2.7.7z"/></svg>',
+    trash: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.6 8.5h5.8l.6-8.5M7 7v4M9 7v4"/></svg>',
+    left: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3L5 8l5 5"/></svg>',
+    right: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3l5 5-5 5"/></svg>'
+  };
+
+  /* ---------- state ---------- */
+  var API_URL = 'https://script.google.com/macros/s/AKfycbyz-SEZ7Ns68-a0Z1O6RXXlkQyzT_h1iD6bc1ZakZJ_Mvoivwi1Sw0kJ9tojSv65gUM/exec'; // Google Apps Script web app address (ends with /exec)
+  var POLL_MS = 15000;
+  var PIN_KEY = 'tracker_pin_v1';
+  var pin = '';
+  var auth = 'checking';   // 'checking' | 'locked' | 'ok'
+  var lockError = '';
+  var syncError = '';
+  var writeSeq = 0;        // changes on every local write
+  var writing = 0;         // writes in flight
+  var refreshing = false;
+  var lastSig = '';
+  var jobs = [];
+  var projects = [];
+  var ui = { view: 'dashboard', status: 'all', project: 'all', q: '', sort: 'deadline', calY: 0, calM: 0, day: '' };
+  var lastFocus = null;
+  var pendingConfirm = null;
+  var toastTimer = null;
+
+  /* ---------- helpers ---------- */
+  function $(s) { return document.querySelector(s); }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function pad(n) { return String(n).padStart(2, '0'); }
+  function ymd(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function parseYmd(s) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || '');
+    return m ? new Date(+m[1], +m[2] - 1, +m[3]) : null;
+  }
+  function today() { var n = new Date(); return new Date(n.getFullYear(), n.getMonth(), n.getDate()); }
+  function daysLeft(s) {
+    var d = parseYmd(s);
+    return d ? Math.round((d - today()) / 86400000) : null;
+  }
+  function fmtDate(s) {
+    var d = parseYmd(s);
+    return d ? d.getDate() + ' ' + MON_S[d.getMonth()] + ' ' + d.getFullYear() : 'ไม่ระบุ';
+  }
+  function splitList(s) {
+    return String(s || '').split(/[,،、]/).map(function (x) { return x.trim(); }).filter(Boolean);
+  }
+  function isOpen(j) { return j.status !== DONE; }
+  function isLate(j) { var d = daysLeft(j.deadline); return isOpen(j) && d !== null && d < 0; }
+  function countdown(j) {
+    if (j.status === DONE) return 'เสร็จแล้ว';
+    var d = daysLeft(j.deadline);
+    if (d === null) return 'ไม่ระบุกำหนด';
+    if (d < 0) return 'เกินกำหนด ' + (-d) + ' วัน';
+    if (d === 0) return 'ครบกำหนดวันนี้';
+    if (d === 1) return 'พรุ่งนี้';
+    return 'อีก ' + d + ' วัน';
+  }
+  function urgency(j) {
+    if (j.status === DONE) return 'done';
+    var d = daysLeft(j.deadline);
+    if (d === null) return 'ok';
+    if (d < 0) return 'late';
+    if (d <= 3) return 'soon';
+    if (d <= 7) return 'week';
+    return 'ok';
+  }
+  function projById(id) {
+    for (var i = 0; i < projects.length; i++) if (projects[i].id === id) return projects[i];
+    return null;
+  }
+  function projName(id) { var p = projById(id); return p ? p.name : ''; }
+  function byDeadline(a, b) {
+    return (a.deadline || '9999-99-99').localeCompare(b.deadline || '9999-99-99');
+  }
+  function toast(msg) {
+    var t = $('#toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.classList.remove('show'); }, 2600);
+  }
+
+  /* ---------- Google Apps Script API ---------- */
+  function readPin() { try { return localStorage.getItem(PIN_KEY) || ''; } catch (e) { return ''; } }
+  function savePin(p) {
+    try { if (p) localStorage.setItem(PIN_KEY, p); else localStorage.removeItem(PIN_KEY); } catch (e) { /* storage blocked */ }
+  }
+
+  async function api(action, payload) {
+    var ctl = new AbortController();
+    var timer = setTimeout(function () { ctl.abort(); }, 25000);
+    try {
+      var res = await fetch(API_URL, {
+        method: 'POST',
+        // text/plain keeps this a simple request, so the browser sends no preflight
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(Object.assign({ action: action, pin: pin }, payload || {})),
+        redirect: 'follow',
+        signal: ctl.signal
+      });
+      var data = await res.json();
+      if (!data || !data.ok) {
+        var er = new Error((data && data.error) || 'bad_response');
+        er.code = (data && data.error) || 'bad_response';
+        throw er;
+      }
+      return data;
+    } finally { clearTimeout(timer); }
+  }
+
+  function errText(e) {
+    var c = e && (e.code || e.name);
+    if (c === 'bad_pin') return 'PIN ไม่ถูกต้อง';
+    if (c === 'locked') return 'ใส่ PIN ผิดหลายครั้ง ลองใหม่ใน 10 นาที';
+    if (c === 'AbortError') return 'เชื่อมต่อช้าเกินไป';
+    if (c === 'TypeError') return 'ติดต่อ Google ไม่ได้ ตรวจอินเทอร์เน็ตหรือลิงก์ Web App';
+    return (e && e.message) || 'ไม่ทราบสาเหตุ';
+  }
+
+  function lockApp(msg) {
+    pin = ''; savePin('');
+    auth = 'locked'; lockError = msg || ''; syncError = '';
+    render();
+  }
+
+  function upsertLocal(arr, row) {
+    for (var i = 0; i < arr.length; i++) if (arr[i].id === row.id) { arr[i] = row; return; }
+    arr.push(row);
+  }
+
+  async function safe(fn, okMsg) {
+    writing++; writeSeq++;
+    try { await fn(); if (okMsg) toast(okMsg); return true; }
+    catch (e) {
+      console.error(e);
+      if (e && e.code === 'bad_pin') lockApp('PIN ไม่ถูกต้องหรือถูกเปลี่ยน ใส่ใหม่อีกครั้ง');
+      else toast('บันทึกไม่สำเร็จ: ' + errText(e));
+      return false;
+    } finally {
+      writing--; writeSeq++;
+      lastSig = '';          // next refresh always redraws from the sheet
+      render();
+      refresh();
+    }
+  }
+
+  async function refresh() {
+    if (refreshing || writing > 0 || !pin) return;
+    refreshing = true;
+    var seq = writeSeq;
+    try {
+      var data = await api('list');
+      if (seq === writeSeq && writing === 0) {
+        var sig = JSON.stringify([data.jobs, data.projects]);
+        var changed = sig !== lastSig || auth !== 'ok' || !!syncError;
+        jobs = data.jobs; projects = data.projects; lastSig = sig;
+        auth = 'ok'; syncError = '';
+        savePin(pin);
+        if (changed) render();
+      }
+    } catch (e) {
+      if (e && e.code === 'bad_pin') lockApp(lockError === 'checking' ? 'PIN ไม่ถูกต้อง' : 'PIN ไม่ถูกต้องหรือถูกเปลี่ยน ใส่ใหม่อีกครั้ง');
+      else if (e && e.code === 'locked') lockApp('ใส่ PIN ผิดหลายครั้ง ลองใหม่ใน 10 นาที');
+      else { syncError = errText(e); render(); }
+    } finally { refreshing = false; }
+  }
+
+  async function tryPin(p) {
+    pin = p; auth = 'checking'; syncError = ''; lockError = 'checking';
+    render();
+    await refresh();
+    if (auth === 'ok') lockError = '';
+  }
+
+  /* ---------- render ---------- */
+  function lateCount() { return jobs.filter(isLate).length; }
+
+  function renderNav() {
+    if (auth !== 'ok') { $('#nav').innerHTML = ''; return; }
+    var late = lateCount();
+    var items = [['dashboard', 'ภาพรวม'], ['jobs', 'งาน'], ['projects', 'โปรเจกต์']];
+    $('#nav').innerHTML = items.map(function (it) {
+      var badge = it[0] === 'jobs' && late ? '<span class="badge" title="งานเกินกำหนด">' + late + '</span>' : '';
+      return '<a href="#' + it[0] + '"' + (ui.view === it[0] ? ' aria-current="page"' : '') + '>' + it[1] + badge + '</a>';
+    }).join('');
+  }
+
+  function renderBanner() {
+    var msg = '';
+    if (API_URL.indexOf('PUT_') === 0) msg = 'ยังไม่ได้ตั้งค่าลิงก์ Web App ใน index.html (ตัวแปร API_URL)';
+    else if (syncError && auth === 'ok') msg = 'เชื่อมต่อ Google Sheet ไม่ได้ (' + syncError + ') กำลังลองใหม่ ข้อมูลที่เห็นอาจไม่ใช่ล่าสุด';
+    $('#banner').textContent = msg;
+  }
+
+  function lockHTML() {
+    var err = lockError && lockError !== 'checking' ? lockError : '';
+    return '<div class="card lock"><h1>ใส่ PIN เพื่อเข้าใช้งาน</h1><p class="sub">PIN ตั้งไว้ในสคริปต์ที่เชื่อมกับ Google Sheet</p>' +
+      '<form id="lockForm" novalidate><div class="field"><label for="pin-in">PIN</label>' +
+      '<input type="password" id="pin-in" autocomplete="current-password" maxlength="64"></div>' +
+      '<div class="err" role="alert">' + esc(err) + '</div>' +
+      '<div class="actions"><button type="submit" class="btn primary">เข้าใช้งาน</button></div></form></div>';
+  }
+
+  function checkingHTML() {
+    if (syncError) {
+      return '<div class="card empty"><p>เชื่อมต่อ Google Sheet ไม่ได้: ' + esc(syncError) + '</p>' +
+        '<div class="actions" style="justify-content:center"><button type="button" class="btn primary" data-action="retry">ลองใหม่</button>' +
+        '<button type="button" class="btn" data-action="lock">ใส่ PIN ใหม่</button></div></div>';
+    }
+    return '<p class="loading">กำลังโหลดข้อมูล…</p>';
+  }
+
+  function render() {
+    var keep = document.activeElement;
+    var kid = keep && keep.id && keep.closest('#main') ? keep.id : '';
+    var ss = kid ? keep.selectionStart : null;
+    var se = kid ? keep.selectionEnd : null;
+
+    renderNav();
+    renderBanner();
+    document.body.classList.toggle('is-locked', auth !== 'ok');
+    $('#main').innerHTML = auth === 'locked' ? lockHTML()
+      : auth !== 'ok' ? checkingHTML()
+      : ui.view === 'jobs' ? viewJobs() : ui.view === 'projects' ? viewProjects() : viewDashboard();
+
+    if (auth === 'locked' && !kid) { var pi = document.getElementById('pin-in'); if (pi) pi.focus(); }
+    if (kid) {
+      var el = document.getElementById(kid);
+      if (el) {
+        el.focus();
+        try { if (ss != null) el.setSelectionRange(ss, se); } catch (e) { /* not a text input */ }
+      }
+    }
+  }
+
+  /* ----- shared pieces ----- */
+  function statusSelect(j) {
+    var cls = STATUS_CLS[j.status] || 'todo';
+    return '<span class="selwrap ' + cls + '"><select class="st" data-action="status" data-id="' + esc(j.id) + '" aria-label="สถานะของงาน ' + esc(j.title) + '">' +
+      STATUS.map(function (s) { return '<option' + (s.key === j.status ? ' selected' : '') + '>' + s.key + '</option>'; }).join('') +
+      '</select></span>';
+  }
+  function diffBars(j) {
+    var idx = DIFF.indexOf(j.difficulty);
+    var lv = idx >= 0 ? idx + 1 : 0;
+    var bars = '';
+    for (var i = 1; i <= 4; i++) bars += '<i class="' + (i <= lv ? 'on' : '') + '"></i>';
+    return '<span class="diff" title="ความยาก: ' + esc(j.difficulty || 'ไม่ระบุ') + '">' + bars + '<span>' + esc(j.difficulty || '') + '</span></span>';
+  }
+  function miniRow(j) {
+    var p = projName(j.projectId);
+    return '<button type="button" class="mini u-' + urgency(j) + '" data-action="edit-job" data-id="' + esc(j.id) + '">' +
+      '<span class="mini-t"><b>' + esc(j.title) + '</b><span>' + esc(p || 'ไม่มีโปรเจกต์') + ' · ' + esc(j.owner || 'ยังไม่ระบุผู้รับผิดชอบ') + '</span></span>' +
+      '<span class="due">' + fmtDate(j.deadline) + '<br>' + countdown(j) + '</span></button>';
+  }
+
+  /* ----- dashboard ----- */
+  function viewDashboard() {
+    var now = today();
+    var dateStr = now.getDate() + ' ' + MON_L[now.getMonth()] + ' ' + now.getFullYear();
+    var head = '<div class="page-head"><div><h1>ภาพรวม</h1><p class="sub">วันนี้ ' + dateStr + '</p></div>' +
+      '<button type="button" class="btn primary" data-action="add-job">' + ICON.plus + 'เพิ่มงาน</button></div>';
+
+    if (!jobs.length) {
+      return head + '<div class="card empty"><p>ยังไม่มีงานในระบบ</p><button type="button" class="btn primary" data-action="add-job">' + ICON.plus + 'เพิ่มงานแรก</button></div>';
+    }
+
+    var counts = {};
+    STATUS.forEach(function (s) { counts[s.key] = 0; });
+    jobs.forEach(function (j) { if (counts[j.status] != null) counts[j.status]++; });
+    var late = jobs.filter(isLate);
+    var done = counts[DONE];
+    var pct = Math.round(done / jobs.length * 100);
+
+    var alertHtml = late.length
+      ? '<div class="alert"><span>มี ' + late.length + ' งานเกินกำหนด: ' + esc(late.slice(0, 3).map(function (j) { return j.title; }).join(', ')) + (late.length > 3 ? ' และอีก ' + (late.length - 3) + ' งาน' : '') + '</span>' +
+        '<button type="button" class="btn" data-action="go-status" data-status="late">ดูงานที่เกินกำหนด</button></div>'
+      : '';
+
+    var tiles = '<div class="tiles">' + STATUS.map(function (s) {
+      return '<button type="button" class="tile" style="--c:var(--' + s.cls + '-bar)" data-action="go-status" data-status="' + s.key + '">' +
+        '<div class="tile-num">' + counts[s.key] + '</div><div class="tile-label">' + s.key + '</div></button>';
+    }).join('') + '</div>';
+
+    var progress = '<div class="card"><div class="prog-row"><span>ความคืบหน้ารวม</span><span>เสร็จ ' + done + ' จาก ' + jobs.length + ' งาน · ' + pct + '%</span></div>' +
+      '<div class="prog" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pct + '" aria-label="ความคืบหน้ารวม"><span style="width:' + pct + '%"></span></div></div>';
+
+    var upcoming = jobs.filter(isOpen).sort(byDeadline).slice(0, 6);
+    var upHtml = upcoming.length
+      ? '<div class="stack">' + upcoming.map(miniRow).join('') + '</div>'
+      : '<p class="empty">ไม่มีงานค้าง ทุกงานเสร็จแล้ว</p>';
+
+    return head + alertHtml + tiles + progress +
+      '<div class="dash"><section class="card" aria-labelledby="upT"><div class="card-h"><h2 id="upT">ใกล้ถึงกำหนด</h2>' +
+      '<a class="muted" href="#jobs">ดูทั้งหมด</a></div>' + upHtml + '</section>' +
+      '<section class="card" aria-labelledby="calT">' + calendarHTML() + '</section></div>';
+  }
+
+  function calendarHTML() {
+    var y = ui.calY, m = ui.calM;
+    var first = new Date(y, m, 1).getDay();
+    var dim = new Date(y, m + 1, 0).getDate();
+    var byDay = {};
+    jobs.forEach(function (j) { if (j.deadline) (byDay[j.deadline] = byDay[j.deadline] || []).push(j); });
+    var t = ymd(today());
+    var cells = '';
+    var i, d;
+    for (i = 0; i < first; i++) cells += '<span></span>';
+    for (d = 1; d <= dim; d++) {
+      var key = y + '-' + pad(m + 1) + '-' + pad(d);
+      var list = byDay[key] || [];
+      var dots = list.slice(0, 3).map(function (j) { return '<i class="dot u-' + urgency(j) + '"></i>'; }).join('');
+      cells += '<button type="button" class="day' + (key === t ? ' today' : '') + (key === ui.day ? ' sel' : '') + '" data-action="pick-day" data-day="' + key + '"' +
+        ' aria-pressed="' + (key === ui.day) + '" aria-label="' + d + ' ' + MON_L[m] + ' ' + y + (list.length ? ', ' + list.length + ' งานครบกำหนด' : '') + '">' +
+        '<span>' + d + '</span><span class="dots">' + dots + '</span></button>';
+    }
+    var dow = DOW.map(function (n) { return '<div class="dow">' + n + '</div>'; }).join('');
+
+    var sel = ui.day ? (byDay[ui.day] || []).slice().sort(function (a, b) { return (a.status === DONE) - (b.status === DONE); }) : [];
+    var selTitle = ui.day ? fmtDate(ui.day) : '';
+    var selHtml = sel.length
+      ? '<div class="stack">' + sel.map(miniRow).join('') + '</div>'
+      : '<p class="muted" style="font-size:14px">ไม่มีงานที่ครบกำหนดในวันนี้</p>';
+
+    return '<div class="card-h"><h2 id="calT">ปฏิทินกำหนดส่ง</h2><div class="cal-nav">' +
+      '<button type="button" class="icon-btn" data-action="cal-prev" aria-label="เดือนก่อนหน้า">' + ICON.left + '</button>' +
+      '<span class="cal-title">' + MON_L[m] + ' ' + y + '</span>' +
+      '<button type="button" class="icon-btn" data-action="cal-next" aria-label="เดือนถัดไป">' + ICON.right + '</button></div></div>' +
+      '<div class="cal-grid">' + dow + cells + '</div>' +
+      '<div class="day-list"><h3>' + esc(selTitle) + (sel.length ? ' · ' + sel.length + ' งาน' : '') + '</h3>' + selHtml + '</div>';
+  }
+
+  /* ----- jobs ----- */
+  function filteredJobs() {
+    var q = ui.q.trim().toLowerCase();
+    var l = jobs.filter(function (j) {
+      if (ui.status === 'late') { if (!isLate(j)) return false; }
+      else if (ui.status !== 'all' && j.status !== ui.status) return false;
+      if (ui.project !== 'all') {
+        var pid = j.projectId || '';
+        if (ui.project === 'none' ? pid !== '' : pid !== ui.project) return false;
+      }
+      if (q) {
+        var hay = [j.title, j.owner, j.collaborators, j.note, projName(j.projectId)].join(' ').toLowerCase();
+        if (hay.indexOf(q) < 0) return false;
+      }
+      return true;
+    });
+    l.sort(function (a, b) {
+      if (ui.sort === 'difficulty') return (DIFF.indexOf(b.difficulty) - DIFF.indexOf(a.difficulty)) || byDeadline(a, b);
+      if (ui.sort === 'new') return String(b.createdAt || '').localeCompare(String(a.createdAt || ''));
+      return ((a.status === DONE) - (b.status === DONE)) || byDeadline(a, b);
+    });
+    return l;
+  }
+
+  function jobCard(j) {
+    var u = urgency(j);
+    var collabs = splitList(j.collaborators);
+    var p = projById(j.projectId);
+    return '<article class="job u-' + u + '">' +
+      '<div class="job-main">' +
+        '<h3 class="job-title">' + esc(j.title) + '</h3>' +
+        '<div class="job-proj">' + (p ? esc(p.name) : 'ไม่มีโปรเจกต์') + '</div>' +
+        '<div class="job-meta">' +
+          '<span><span class="k">ผู้รับผิดชอบ</span> <b>' + esc(j.owner || '–') + '</b></span>' +
+          '<span><span class="k">ผู้ร่วมงาน</span> ' + (collabs.length ? collabs.map(function (c) { return '<span class="chip">' + esc(c) + '</span>'; }).join(' ') : '–') + '</span>' +
+          diffBars(j) +
+        '</div>' +
+        (j.note ? '<p class="job-note">' + esc(j.note) + '</p>' : '') +
+      '</div>' +
+      '<div class="job-side">' +
+        '<div class="due">' + fmtDate(j.deadline) + ' · ' + countdown(j) + '</div>' +
+        statusSelect(j) +
+        '<div class="job-actions">' +
+          '<button type="button" class="icon-btn" data-action="edit-job" data-id="' + esc(j.id) + '" aria-label="แก้ไขงาน ' + esc(j.title) + '">' + ICON.edit + '</button>' +
+          '<button type="button" class="icon-btn del" data-action="del-job" data-id="' + esc(j.id) + '" aria-label="ลบงาน ' + esc(j.title) + '">' + ICON.trash + '</button>' +
+        '</div>' +
+      '</div></article>';
+  }
+
+  function viewJobs() {
+    var list = filteredJobs();
+    var late = lateCount();
+    var chips = [{ k: 'all', label: 'ทั้งหมด', n: jobs.length }].concat(STATUS.map(function (s) {
+      return { k: s.key, label: s.key, n: jobs.filter(function (j) { return j.status === s.key; }).length };
+    }));
+    chips.push({ k: 'late', label: 'เกินกำหนด', n: late });
+    var chipHtml = '<div class="chips" role="group" aria-label="กรองตามสถานะ">' + chips.map(function (c) {
+      return '<button type="button" class="fchip" data-action="filter-status" data-status="' + c.k + '" aria-pressed="' + (ui.status === c.k) + '">' + c.label + ' <span class="n">' + c.n + '</span></button>';
+    }).join('') + '</div>';
+
+    var projOpts = '<option value="all"' + (ui.project === 'all' ? ' selected' : '') + '>ทุกโปรเจกต์</option>' +
+      '<option value="none"' + (ui.project === 'none' ? ' selected' : '') + '>ไม่มีโปรเจกต์</option>' +
+      projects.slice().sort(function (a, b) { return String(a.name).localeCompare(String(b.name), 'th'); }).map(function (p) {
+        return '<option value="' + esc(p.id) + '"' + (ui.project === p.id ? ' selected' : '') + '>' + esc(p.name) + '</option>';
+      }).join('');
+    var sortOpts = [['deadline', 'เรียงตามกำหนดส่ง'], ['difficulty', 'เรียงตามความยาก'], ['new', 'เพิ่มล่าสุดก่อน']].map(function (o) {
+      return '<option value="' + o[0] + '"' + (ui.sort === o[0] ? ' selected' : '') + '>' + o[1] + '</option>';
+    }).join('');
+
+    var body;
+    if (!jobs.length) {
+      body = '<div class="card empty"><p>ยังไม่มีงานในระบบ</p><button type="button" class="btn primary" data-action="add-job">' + ICON.plus + 'เพิ่มงานแรก</button></div>';
+    } else if (!list.length) {
+      body = '<div class="card empty"><p>ไม่พบงานที่ตรงกับตัวกรอง</p><button type="button" class="btn" data-action="clear-filters">ล้างตัวกรอง</button></div>';
+    } else {
+      body = '<div class="list">' + list.map(jobCard).join('') + '</div>';
+    }
+
+    return '<div class="page-head"><div><h1>งาน</h1><p class="sub">แสดง ' + list.length + ' จาก ' + jobs.length + ' งาน</p></div>' +
+      '<button type="button" class="btn primary" data-action="add-job">' + ICON.plus + 'เพิ่มงาน</button></div>' +
+      '<div class="toolbar">' +
+        '<input type="search" id="q" placeholder="ค้นหาชื่องาน ผู้รับผิดชอบ หมายเหตุ" value="' + esc(ui.q) + '" aria-label="ค้นหางาน">' +
+        '<select class="f" id="projSel" aria-label="กรองตามโปรเจกต์">' + projOpts + '</select>' +
+        '<select class="f" id="sortSel" aria-label="เรียงลำดับ">' + sortOpts + '</select>' +
+      '</div>' + chipHtml + body;
+  }
+
+  /* ----- projects ----- */
+  function projectCard(p) {
+    var pj = jobs.filter(function (j) { return j.projectId === p.id; }).sort(byDeadline);
+    var done = pj.filter(function (j) { return j.status === DONE; }).length;
+    var pct = pj.length ? Math.round(done / pj.length * 100) : 0;
+    var next = pj.filter(isOpen)[0];
+    var stats = pj.length
+      ? 'เสร็จ ' + done + ' จาก ' + pj.length + ' งาน · ' + pct + '%' + (next ? ' · งานถัดไปครบกำหนด ' + fmtDate(next.deadline) : '')
+      : 'ยังไม่มีงานในโปรเจกต์นี้';
+    var items = pj.map(function (j) {
+      return '<li class="u-' + urgency(j) + '"><b>' + esc(j.title) + '</b><span class="r"><span class="due">' + countdown(j) + '</span>' +
+        '<span class="pill ' + (STATUS_CLS[j.status] || 'todo') + '">' + esc(j.status) + '</span>' +
+        '<button type="button" class="icon-btn" data-action="edit-job" data-id="' + esc(j.id) + '" aria-label="แก้ไขงาน ' + esc(j.title) + '">' + ICON.edit + '</button></span></li>';
+    }).join('');
+    return '<section class="card proj"><div class="card-h"><div style="min-width:0"><h2>' + esc(p.name) + '</h2>' + (p.note ? '<p class="note">' + esc(p.note) + '</p>' : '') + '</div>' +
+      '<div class="job-actions"><button type="button" class="icon-btn" data-action="edit-project" data-id="' + esc(p.id) + '" aria-label="แก้ไขโปรเจกต์ ' + esc(p.name) + '">' + ICON.edit + '</button>' +
+      '<button type="button" class="icon-btn del" data-action="del-project" data-id="' + esc(p.id) + '" aria-label="ลบโปรเจกต์ ' + esc(p.name) + '">' + ICON.trash + '</button></div></div>' +
+      '<div class="prog" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pct + '" aria-label="ความคืบหน้า ' + esc(p.name) + '"><span style="width:' + pct + '%"></span></div>' +
+      '<div class="proj-stats">' + stats + '</div>' +
+      (items ? '<ul class="proj-jobs">' + items + '</ul>' : '') +
+      '<button type="button" class="btn" data-action="add-job" data-project="' + esc(p.id) + '">' + ICON.plus + 'เพิ่มงานในโปรเจกต์นี้</button></section>';
+  }
+
+  function viewProjects() {
+    var head = '<div class="page-head"><div><h1>โปรเจกต์</h1><p class="sub">' + projects.length + ' โปรเจกต์</p></div>' +
+      '<button type="button" class="btn primary" data-action="add-project">' + ICON.plus + 'เพิ่มโปรเจกต์</button></div>';
+    var orphans = jobs.filter(function (j) { return !j.projectId || !projById(j.projectId); });
+    var orphanCard = orphans.length
+      ? '<section class="card proj"><div class="card-h"><h2>งานที่ยังไม่อยู่ในโปรเจกต์</h2></div><ul class="proj-jobs">' + orphans.sort(byDeadline).map(function (j) {
+          return '<li class="u-' + urgency(j) + '"><b>' + esc(j.title) + '</b><span class="r"><span class="due">' + countdown(j) + '</span><span class="pill ' + (STATUS_CLS[j.status] || 'todo') + '">' + esc(j.status) + '</span>' +
+            '<button type="button" class="icon-btn" data-action="edit-job" data-id="' + esc(j.id) + '" aria-label="แก้ไขงาน ' + esc(j.title) + '">' + ICON.edit + '</button></span></li>';
+        }).join('') + '</ul></section>'
+      : '';
+    if (!projects.length && !orphans.length) {
+      return head + '<div class="card empty"><p>ยังไม่มีโปรเจกต์</p><button type="button" class="btn primary" data-action="add-project">' + ICON.plus + 'เพิ่มโปรเจกต์แรก</button></div>';
+    }
+    var sorted = projects.slice().sort(function (a, b) { return String(b.createdAt || '').localeCompare(String(a.createdAt || '')); });
+    return head + '<div class="grid2">' + sorted.map(projectCard).join('') + orphanCard + '</div>';
+  }
+
+  /* ---------- modals ---------- */
+  function openModal(html) {
+    lastFocus = document.activeElement;
+    $('#modal').innerHTML = '<div class="overlay"><div class="panel" role="dialog" aria-modal="true" aria-labelledby="mT">' + html + '</div></div>';
+    var f = $('#modal').querySelector('[data-first]') || $('#modal').querySelector('input,select,textarea,button');
+    if (f) f.focus();
+  }
+  function closeModal() {
+    $('#modal').innerHTML = '';
+    pendingConfirm = null;
+    if (lastFocus && lastFocus.focus && document.contains(lastFocus)) lastFocus.focus();
+  }
+  function modalOpen() { return !!$('#modal').firstChild; }
+
+  function optionList(values, selected) {
+    return values.map(function (v) { return '<option value="' + esc(v) + '"' + (v === selected ? ' selected' : '') + '>' + esc(v) + '</option>'; }).join('');
+  }
+
+  function openJobModal(job, presetProject) {
+    var d = today(); d.setDate(d.getDate() + 7);
+    var j = job || { title: '', projectId: presetProject || '', owner: '', collaborators: '', deadline: ymd(d), difficulty: 'ปานกลาง', status: 'รอทำ', note: '' };
+    var names = [];
+    jobs.forEach(function (x) {
+      [x.owner].concat(splitList(x.collaborators)).forEach(function (n) { if (n && names.indexOf(n) < 0) names.push(n); });
+    });
+    ['IT', 'PD'].forEach(function (n) { if (names.indexOf(n) < 0) names.push(n); });
+    var projOpts = '<option value="">ไม่มีโปรเจกต์</option>' + projects.slice().sort(function (a, b) { return String(a.name).localeCompare(String(b.name), 'th'); }).map(function (p) {
+      return '<option value="' + esc(p.id) + '"' + (p.id === j.projectId ? ' selected' : '') + '>' + esc(p.name) + '</option>';
+    }).join('');
+    var seg = DIFF.map(function (n) {
+      return '<label class="seg-o"><input type="radio" name="diff" value="' + n + '"' + (n === j.difficulty ? ' checked' : '') + '><span>' + n + '</span></label>';
+    }).join('');
+
+    openModal('<h2 id="mT">' + (job ? 'แก้ไขงาน' : 'เพิ่มงานใหม่') + '</h2>' +
+      '<form id="jobForm" data-id="' + esc(job ? job.id : '') + '" novalidate>' +
+        '<div class="field"><label for="f-title">ชื่องาน <span class="req">*</span></label><input type="text" id="f-title" data-first value="' + esc(j.title) + '" maxlength="200" placeholder="เช่น ScanBarcode TDK"><div class="err" id="e-title" aria-live="polite"></div></div>' +
+        '<div class="field"><label for="f-project">โปรเจกต์</label><select class="f" id="f-project">' + projOpts + '</select></div>' +
+        '<div class="two">' +
+          '<div class="field"><label for="f-owner">ผู้รับผิดชอบ</label><input type="text" id="f-owner" list="dl-names" value="' + esc(j.owner) + '" maxlength="80" placeholder="เช่น IT"></div>' +
+          '<div class="field"><label for="f-collab">ผู้ร่วมงาน</label><input type="text" id="f-collab" list="dl-names" value="' + esc(j.collaborators) + '" maxlength="160" placeholder="เช่น PD"><div class="hint">คั่นหลายคนด้วยเครื่องหมายจุลภาค</div></div>' +
+        '</div>' +
+        '<datalist id="dl-names">' + names.map(function (n) { return '<option value="' + esc(n) + '">'; }).join('') + '</datalist>' +
+        '<div class="two">' +
+          '<div class="field"><label for="f-deadline">กำหนดส่ง <span class="req">*</span></label><input type="date" id="f-deadline" value="' + esc(j.deadline) + '"><div class="err" id="e-deadline" aria-live="polite"></div></div>' +
+          '<div class="field"><label for="f-status">สถานะ</label><select class="f" id="f-status">' + optionList(STATUS.map(function (s) { return s.key; }), j.status) + '</select></div>' +
+        '</div>' +
+        '<div class="field" role="radiogroup" aria-labelledby="l-diff"><span class="lbl" id="l-diff">ความยาก</span><div class="seg">' + seg + '</div></div>' +
+        '<div class="field"><label for="f-note">หมายเหตุ</label><textarea id="f-note" maxlength="1000">' + esc(j.note) + '</textarea></div>' +
+        '<div class="actions"><button type="button" class="btn" data-action="close-modal">ยกเลิก</button><button type="submit" class="btn primary" id="saveBtn">บันทึก</button></div>' +
+      '</form>');
+  }
+
+  async function submitJob(form) {
+    var title = $('#f-title').value.trim();
+    var deadline = $('#f-deadline').value;
+    $('#e-title').textContent = title ? '' : 'ใส่ชื่องานก่อนบันทึก';
+    $('#e-deadline').textContent = parseYmd(deadline) ? '' : 'เลือกวันที่กำหนดส่ง';
+    if (!title) { $('#f-title').focus(); return; }
+    if (!parseYmd(deadline)) { $('#f-deadline').focus(); return; }
+
+    var id = form.getAttribute('data-id');
+    var existing = null;
+    for (var i = 0; i < jobs.length; i++) if (jobs[i].id === id) existing = jobs[i];
+    var diffEl = form.querySelector('input[name="diff"]:checked');
+    var status = $('#f-status').value;
+    var data = {
+      title: title,
+      projectId: $('#f-project').value,
+      owner: $('#f-owner').value.trim(),
+      collaborators: $('#f-collab').value.trim(),
+      deadline: deadline,
+      difficulty: diffEl ? diffEl.value : 'ปานกลาง',
+      status: status,
+      note: $('#f-note').value.trim(),
+      createdAt: existing && existing.createdAt ? existing.createdAt : new Date().toISOString(),
+      doneAt: status === DONE ? ((existing && existing.doneAt) || new Date().toISOString()) : ''
+    };
+    var btn = $('#saveBtn'); btn.disabled = true;
+    var ok = await safe(async function () {
+      var res = await api('upsert', { table: 'jobs', row: id ? Object.assign({ id: id }, data) : data });
+      upsertLocal(jobs, res.row);
+    }, 'บันทึกงานแล้ว');
+    if (ok) closeModal(); else btn.disabled = false;
+  }
+
+  function openProjectModal(p) {
+    var x = p || { name: '', note: '' };
+    openModal('<h2 id="mT">' + (p ? 'แก้ไขโปรเจกต์' : 'เพิ่มโปรเจกต์ใหม่') + '</h2>' +
+      '<form id="projForm" data-id="' + esc(p ? p.id : '') + '" novalidate>' +
+        '<div class="field"><label for="p-name">ชื่อโปรเจกต์ <span class="req">*</span></label><input type="text" id="p-name" data-first value="' + esc(x.name) + '" maxlength="200" placeholder="เช่น ติดตั้งสายแลนและคอมพิวเตอร์ Line QC ZN"><div class="err" id="e-pname" aria-live="polite"></div></div>' +
+        '<div class="field"><label for="p-note">รายละเอียด</label><textarea id="p-note" maxlength="1000">' + esc(x.note) + '</textarea></div>' +
+        '<div class="actions"><button type="button" class="btn" data-action="close-modal">ยกเลิก</button><button type="submit" class="btn primary" id="saveBtn">บันทึก</button></div>' +
+      '</form>');
+  }
+
+  async function submitProject(form) {
+    var name = $('#p-name').value.trim();
+    $('#e-pname').textContent = name ? '' : 'ใส่ชื่อโปรเจกต์ก่อนบันทึก';
+    if (!name) { $('#p-name').focus(); return; }
+    var id = form.getAttribute('data-id');
+    var existing = projById(id);
+    var data = { name: name, note: $('#p-note').value.trim(), createdAt: existing && existing.createdAt ? existing.createdAt : new Date().toISOString() };
+    var btn = $('#saveBtn'); btn.disabled = true;
+    var ok = await safe(async function () {
+      var res = await api('upsert', { table: 'projects', row: id ? Object.assign({ id: id }, data) : data });
+      upsertLocal(projects, res.row);
+    }, 'บันทึกโปรเจกต์แล้ว');
+    if (ok) closeModal(); else btn.disabled = false;
+  }
+
+  function openConfirm(title, body, okLabel, onOk) {
+    pendingConfirm = onOk;
+    openModal('<h2 id="mT">' + esc(title) + '</h2><p style="margin-bottom:18px;color:var(--ink-2)">' + esc(body) + '</p>' +
+      '<div class="actions"><button type="button" class="btn" data-action="close-modal" data-first>ยกเลิก</button><button type="button" class="btn danger" data-action="confirm-ok">' + esc(okLabel) + '</button></div>');
+  }
+
+  /* ---------- events ---------- */
+  function findJob(id) { for (var i = 0; i < jobs.length; i++) if (jobs[i].id === id) return jobs[i]; return null; }
+
+  document.addEventListener('click', function (e) {
+    var t = e.target;
+    if (t.classList && t.classList.contains('overlay')) { closeModal(); return; }
+    var el = t.closest ? t.closest('[data-action]') : null;
+    if (!el || el.tagName === 'SELECT') return;
+    var a = el.getAttribute('data-action');
+    var id = el.getAttribute('data-id');
+
+    if (a === 'go-status') { ui.status = el.getAttribute('data-status'); ui.project = 'all'; ui.q = ''; location.hash = 'jobs'; if (ui.view === 'jobs') render(); }
+    else if (a === 'filter-status') { ui.status = el.getAttribute('data-status'); render(); }
+    else if (a === 'clear-filters') { ui.status = 'all'; ui.project = 'all'; ui.q = ''; render(); }
+    else if (a === 'add-job') openJobModal(null, el.getAttribute('data-project') || '');
+    else if (a === 'edit-job') { var j = findJob(id); if (j) openJobModal(j); }
+    else if (a === 'del-job') {
+      var dj = findJob(id);
+      if (dj) openConfirm('ลบงานนี้?', 'งาน "' + dj.title + '" จะถูกลบถาวร', 'ลบงาน', async function () {
+        var ok = await safe(async function () {
+          await api('remove', { table: 'jobs', id: id });
+          jobs = jobs.filter(function (x) { return x.id !== id; });
+        }, 'ลบงานแล้ว');
+        if (ok) closeModal();
+      });
+    }
+    else if (a === 'add-project') openProjectModal(null);
+    else if (a === 'edit-project') { var p = projById(id); if (p) openProjectModal(p); }
+    else if (a === 'del-project') {
+      var dp = projById(id);
+      if (dp) {
+        var inside = jobs.filter(function (x) { return x.projectId === id; });
+        var msg = inside.length
+          ? 'โปรเจกต์ "' + dp.name + '" มี ' + inside.length + ' งาน งานจะยังอยู่แต่ไม่มีโปรเจกต์'
+          : 'โปรเจกต์ "' + dp.name + '" จะถูกลบถาวร';
+        openConfirm('ลบโปรเจกต์นี้?', msg, 'ลบโปรเจกต์', async function () {
+          var ok = await safe(async function () {
+            await api('deleteProject', { id: id });
+            projects = projects.filter(function (x) { return x.id !== id; });
+            jobs.forEach(function (x) { if (x.projectId === id) x.projectId = ''; });
+          }, 'ลบโปรเจกต์แล้ว');
+          if (ok) closeModal();
+        });
+      }
+    }
+    else if (a === 'confirm-ok') { var fn = pendingConfirm; if (fn) { el.disabled = true; fn(); } }
+    else if (a === 'close-modal') closeModal();
+    else if (a === 'retry') { syncError = ''; auth = 'checking'; render(); refresh(); }
+    else if (a === 'lock') lockApp('');
+    else if (a === 'pick-day') { ui.day = el.getAttribute('data-day'); render(); }
+    else if (a === 'cal-prev') { ui.calM--; if (ui.calM < 0) { ui.calM = 11; ui.calY--; } render(); }
+    else if (a === 'cal-next') { ui.calM++; if (ui.calM > 11) { ui.calM = 0; ui.calY++; } render(); }
+  });
+
+  document.addEventListener('change', function (e) {
+    var el = e.target;
+    if (el.getAttribute && el.getAttribute('data-action') === 'status') {
+      var id = el.getAttribute('data-id');
+      var v = el.value;
+      var j = findJob(id);
+      if (!j || j.status === v) return;
+      var doneAt = v === DONE ? new Date().toISOString() : '';
+      j.status = v; j.doneAt = doneAt;
+      render();   // show the change at once; a failed save redraws from the sheet
+      safe(function () {
+        return api('patch', { table: 'jobs', id: id, fields: { status: v, doneAt: doneAt } });
+      }, 'เปลี่ยนสถานะเป็น "' + v + '" แล้ว');
+    } else if (el.id === 'projSel') { ui.project = el.value; render(); }
+    else if (el.id === 'sortSel') { ui.sort = el.value; render(); }
+  });
+
+  document.addEventListener('input', function (e) {
+    if (e.target.id === 'q') { ui.q = e.target.value; render(); }
+  });
+
+  document.addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (e.target.id === 'lockForm') {
+      var typed = $('#pin-in').value.trim();
+      if (!typed) { lockError = 'ใส่ PIN ก่อน'; render(); return; }
+      tryPin(typed);
+    }
+    else if (e.target.id === 'jobForm') submitJob(e.target);
+    else if (e.target.id === 'projForm') submitProject(e.target);
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (!modalOpen()) return;
+    if (e.key === 'Escape') { closeModal(); return; }
+    if (e.key === 'Tab') {
+      var f = $('#modal').querySelectorAll('input:not([type=radio]),select,textarea,button:not([disabled]),input[type=radio]:checked');
+      if (!f.length) return;
+      var first = f[0], last = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+  });
+
+  function route() {
+    var h = location.hash.replace('#', '');
+    ui.view = VIEWS.indexOf(h) >= 0 ? h : 'dashboard';
+    render();
+  }
+  window.addEventListener('hashchange', route);
+
+  /* ---------- start ---------- */
+  function init() {
+    var n = today();
+    ui.calY = n.getFullYear(); ui.calM = n.getMonth(); ui.day = ymd(n);
+    pin = readPin();
+    if (!pin) auth = 'locked';
+    route();
+    if (pin) refresh();
+    setInterval(function () { if (auth === 'ok' && !document.hidden) refresh(); }, POLL_MS);
+    document.addEventListener('visibilitychange', function () { if (!document.hidden && auth === 'ok') refresh(); });
+  }
+  init();
+})();
+</script>
+</body>
+</html>
