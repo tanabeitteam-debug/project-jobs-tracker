@@ -213,7 +213,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)}
 .day-list h3{font-size:14px;margin-bottom:8px;color:var(--ink-2);font-family:var(--font-body);font-weight:600}
 
 /* jobs */
-.toolbar{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) minmax(0,1fr);gap:10px;margin-bottom:10px}
+.toolbar{display:grid;grid-template-columns:minmax(0,1.4fr) repeat(auto-fit,minmax(0,1fr));gap:10px;margin-bottom:10px}
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
 .fchip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 14px;font-size:14px;font-weight:500;color:var(--ink-2);display:inline-flex;gap:8px;align-items:center}
 .fchip:hover{background:var(--surface-2)}
@@ -264,7 +264,27 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)}
 #toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:10px;font-size:14px;z-index:60;box-shadow:0 8px 24px rgba(0,0,0,.3);opacity:0;pointer-events:none;transition:opacity .2s}
 #toast.show{opacity:1}
 
+.user-btn{display:flex;align-items:center;gap:10px;background:none;border:0;padding:3px 8px 3px 4px;border-radius:10px;text-align:left}
+.user-btn:hover{background:var(--surface-2)}
+.ulist{display:grid;gap:10px}
+.urow{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;box-shadow:var(--shadow)}
+.urow.off{opacity:.65}
+.urow .avatar{width:40px;height:40px}
+.urow b{font-weight:600;overflow-wrap:anywhere}
+.urow .un{font-size:13px;color:var(--ink-3);overflow-wrap:anywhere}
+.urow .meta{font-size:13px;color:var(--ink-2);margin-top:2px;font-variant-numeric:tabular-nums}
+.role{display:inline-block;margin-left:8px;padding:1px 9px;border-radius:999px;font-size:12px;font-weight:600;line-height:1.5;background:var(--accent-soft);color:var(--accent);vertical-align:1px;white-space:nowrap}
+.role.off{background:var(--surface-2);color:var(--ink-3)}
+.note-card{margin-bottom:14px;font-size:14px;color:var(--ink-2)}
+.stamp{font-size:12px;color:var(--ink-3);margin:-2px 0 12px}
+.check{display:flex;align-items:center;gap:8px;font-size:14px}
+.check input{width:18px;height:18px;margin:0}
+.acct{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.acct .avatar{width:44px;height:44px}
+.sep{border:0;border-top:1px solid var(--line);margin:14px 0}
+.ro{background:var(--surface-2)!important;color:var(--ink-2)}
 .lock{max-width:380px;margin:48px auto}
+.lock.wide{max-width:440px}
 .lock h1{font-size:20px;margin-bottom:4px}
 .lock .sub{color:var(--ink-3);font-size:14px;margin-bottom:16px}
 .is-locked .user{display:none}
@@ -306,16 +326,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)}
       </div>
     </div>
     <nav id="nav" aria-label="เมนูหลัก"></nav>
-    <div class="user">
-      <span class="avatar" aria-hidden="true">N</span>
-      <div>
-        <div class="user-name">Nattira Tharator</div>
-        <div class="user-role">Admin</div>
-      </div>
-      <button type="button" class="icon-btn" data-action="lock" aria-label="ล็อกหน้าจอ" title="ล็อกหน้าจอ">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="10" height="6.5" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 015 0v2"/></svg>
-      </button>
-    </div>
+    <div class="user" id="userBox"></div>
   </div>
 </header>
 <div id="banner" role="status"></div>
@@ -343,12 +354,13 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)}
   var MON_S = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
   var MON_L = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
   var DOW = ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'];
-  var VIEWS = ['dashboard', 'jobs', 'projects'];
+  var VIEWS = ['dashboard', 'jobs', 'projects', 'users'];
 
   var ICON = {
     plus: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M8 3v10M3 8h10"/></svg>',
     edit: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 13.5l.7-3L11 2.7a1.4 1.4 0 012 2L5.2 12.8l-2.7.7z"/></svg>',
     trash: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.6 8.5h5.8l.6-8.5M7 7v4M9 7v4"/></svg>',
+    out: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2.5H3.5A1.5 1.5 0 002 4v8a1.5 1.5 0 001.5 1.5H6M10 5l3 3-3 3M13 8H6"/></svg>',
     left: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3L5 8l5 5"/></svg>',
     right: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3l5 5-5 5"/></svg>'
   };
@@ -356,9 +368,14 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)}
   /* ---------- state ---------- */
   var API_URL = 'https://script.google.com/macros/s/AKfycbyz-SEZ7Ns68-a0Z1O6RXXlkQyzT_h1iD6bc1ZakZJ_Mvoivwi1Sw0kJ9tojSv65gUM/exec'; // Google Apps Script web app address (ends with /exec)
   var POLL_MS = 15000;
-  var PIN_KEY = 'tracker_pin_v1';
-  var pin = '';
-  var auth = 'checking';   // 'checking' | 'locked' | 'ok'
+  var OLD_PIN_KEY = 'tracker_pin_v1';   // earlier single-PIN version, removed on start
+  var TOK_KEY = 'tracker_tok_v2';
+  var USER_KEY = 'tracker_user_v2';
+  var token = '';
+  var me = null;           // { id, username, name, role }
+  var users = [];          // admin: everyone, member: only me
+  var maxUsers = 5;
+  var auth = 'checking';   // 'checking' | 'setup' | 'login' | 'ok'
   var lockError = '';
   var syncError = '';
   var writeSeq = 0;        // changes on every local write
@@ -367,7 +384,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)}
   var lastSig = '';
   var jobs = [];
   var projects = [];
-  var ui = { view: 'dashboard', status: 'all', project: 'all', q: '', sort: 'deadline', calY: 0, calM: 0, day: '' };
+  var ui = { view: 'dashboard', status: 'all', project: 'all', owner: 'all', q: '', sort: 'deadline', calY: 0, calM: 0, day: '' };
   var lastFocus = null;
   var pendingConfirm = null;
   var toastTimer = null;
@@ -396,6 +413,15 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)}
   }
   function splitList(s) {
     return String(s || '').split(/[,،、]/).map(function (x) { return x.trim(); }).filter(Boolean);
+  }
+  function isAdmin() { return !!me && me.role === 'admin'; }
+  function canEditProject(p) { return isAdmin() || (!!me && p.ownerId === me.id); }
+  function userById(id) { for (var i = 0; i < users.length; i++) if (users[i].id === id) return users[i]; return null; }
+  function activeUsers() { return users.filter(function (u) { return u.active === 'yes'; }); }
+  function fmtStamp(iso) {
+    var d = new Date(iso);
+    if (!iso || isNaN(d.getTime())) return '';
+    return d.getDate() + ' ' + MON_S[d.getMonth()] + ' ' + d.getFullYear() + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
   }
   function isOpen(j) { return j.status !== DONE; }
   function isUrgent(j) { var u = String(j.urgent == null ? '' : j.urgent).trim(); return u !== '' && u !== '0'; }
@@ -436,10 +462,12 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)}
   }
 
   /* ---------- Google Apps Script API ---------- */
-  function readPin() { try { return localStorage.getItem(PIN_KEY) || ''; } catch (e) { return ''; } }
-  function savePin(p) {
-    try { if (p) localStorage.setItem(PIN_KEY, p); else localStorage.removeItem(PIN_KEY); } catch (e) { /* storage blocked */ }
+  function readTok() { try { return localStorage.getItem(TOK_KEY) || ''; } catch (e) { return ''; } }
+  function saveTok(t) {
+    try { if (t) localStorage.setItem(TOK_KEY, t); else localStorage.removeItem(TOK_KEY); } catch (e) { /* storage blocked */ }
   }
+  function readUserHint() { try { return localStorage.getItem(USER_KEY) || ''; } catch (e) { return ''; } }
+  function saveUserHint(u) { try { if (u) localStorage.setItem(USER_KEY, u); } catch (e) { /* storage blocked */ } }
 
   async function api(action, payload) {
     var ctl = new AbortController();
@@ -449,7 +477,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)}
         method: 'POST',
         // text/plain keeps this a simple request, so the browser sends no preflight
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify(Object.assign({ action: action, pin: pin }, payload || {})),
+        body: JSON.stringify(Object.assign({ action: action, token: token }, payload || {})),
         redirect: 'follow',
         signal: ctl.signal
       });
@@ -463,19 +491,70 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)}
     } finally { clearTimeout(timer); }
   }
 
+  var ERR = {
+    bad_login: 'ชื่อผู้ใช้หรือ PIN ไม่ถูกต้อง',
+    bad_pin: 'PIN เดิมไม่ถูกต้อง',
+    locked: 'ใส่ผิดหลายครั้ง ลองใหม่ใน 10 นาที',
+    bad_token: 'หมดเวลาเข้าสู่ระบบ ให้เข้าสู่ระบบใหม่',
+    forbidden: 'ไม่มีสิทธิ์ทำรายการนี้',
+    not_found: 'ไม่พบรายการนี้ (อาจถูกลบไปแล้ว)',
+    already_setup: 'ตั้งค่าครั้งแรกเสร็จแล้ว ให้เข้าสู่ระบบแทน',
+    bad_setup_key: 'รหัสตั้งค่าไม่ถูกต้อง',
+    no_setup_key: 'ในสคริปต์ยังไม่มีรหัสตั้งค่า',
+    max_users: 'มีผู้ใช้ที่เปิดใช้งานครบ ' + 5 + ' คนแล้ว ปิดใช้งานคนอื่นก่อน',
+    username_taken: 'ชื่อผู้ใช้นี้มีอยู่แล้ว',
+    bad_username: 'ชื่อผู้ใช้ใช้ได้เฉพาะ a-z ตัวเลข . _ - ยาว 2–24 ตัว',
+    bad_name: 'ใส่ชื่อที่แสดง (ไม่เกิน 60 ตัวอักษร)',
+    weak_pin: 'PIN ต้องยาวอย่างน้อย 6 ตัว',
+    last_admin: 'ต้องมีผู้ดูแลระบบที่ใช้งานอยู่อย่างน้อย 1 คน',
+    bad_owner: 'ผู้รับผิดชอบที่เลือกไม่ถูกต้อง',
+    bad_project: 'โปรเจกต์ที่เลือกไม่ถูกต้อง'
+  };
   function errText(e) {
     var c = e && (e.code || e.name);
-    if (c === 'bad_pin') return 'PIN ไม่ถูกต้อง';
-    if (c === 'locked') return 'ใส่ PIN ผิดหลายครั้ง ลองใหม่ใน 10 นาที';
+    if (ERR[c]) return ERR[c];
     if (c === 'AbortError') return 'เชื่อมต่อช้าเกินไป';
     if (c === 'TypeError') return 'ติดต่อ Google ไม่ได้ ตรวจอินเทอร์เน็ตหรือลิงก์ Web App';
     return (e && e.message) || 'ไม่ทราบสาเหตุ';
   }
 
-  function lockApp(msg) {
-    pin = ''; savePin('');
-    auth = 'locked'; lockError = msg || ''; syncError = '';
+  // Ask the script whether this is a first run (no admin yet) or a normal sign-in.
+  async function loadMode() {
+    auth = 'checking'; syncError = '';
     render();
+    try {
+      var d = await api('status');
+      auth = d.mode === 'setup' ? 'setup' : 'login';
+    } catch (e) { syncError = errText(e); }
+    render();
+  }
+
+  function clearSession() {
+    token = ''; saveTok('');
+    me = null; users = []; jobs = []; projects = []; lastSig = '';
+    closeModal();
+  }
+
+  function toLogin(msg) {
+    clearSession();
+    lockError = msg || '';
+    loadMode();
+  }
+
+  async function logout() {
+    var t = token;
+    if (t) { try { await api('logout'); } catch (e) { /* the token expires on its own */ } }
+    toLogin('');
+  }
+
+  function signedIn(res, username) {
+    token = res.token; saveTok(token);
+    me = res.me; saveUserHint(username || res.me.username);
+    users = [res.me]; jobs = []; projects = []; lastSig = '';
+    lockError = ''; syncError = '';
+    auth = 'checking';
+    render();
+    refresh();
   }
 
   function upsertLocal(arr, row) {
@@ -488,7 +567,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)}
     try { await fn(); if (okMsg) toast(okMsg); return true; }
     catch (e) {
       console.error(e);
-      if (e && e.code === 'bad_pin') lockApp('PIN ไม่ถูกต้องหรือถูกเปลี่ยน ใส่ใหม่อีกครั้ง');
+      if (e && e.code === 'bad_token') toLogin(ERR.bad_token);
       else toast('บันทึกไม่สำเร็จ: ' + errText(e));
       return false;
     } finally {
@@ -500,31 +579,23 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)}
   }
 
   async function refresh() {
-    if (refreshing || writing > 0 || !pin) return;
+    if (refreshing || writing > 0 || !token) return;
     refreshing = true;
     var seq = writeSeq;
     try {
       var data = await api('list');
       if (seq === writeSeq && writing === 0) {
-        var sig = JSON.stringify([data.jobs, data.projects]);
+        var sig = JSON.stringify([data.jobs, data.projects, data.users, data.me]);
         var changed = sig !== lastSig || auth !== 'ok' || !!syncError;
-        jobs = data.jobs; projects = data.projects; lastSig = sig;
+        jobs = data.jobs; projects = data.projects; users = data.users; me = data.me;
+        maxUsers = data.maxUsers || 5; lastSig = sig;
         auth = 'ok'; syncError = '';
-        savePin(pin);
         if (changed) render();
       }
     } catch (e) {
-      if (e && e.code === 'bad_pin') lockApp(lockError === 'checking' ? 'PIN ไม่ถูกต้อง' : 'PIN ไม่ถูกต้องหรือถูกเปลี่ยน ใส่ใหม่อีกครั้ง');
-      else if (e && e.code === 'locked') lockApp('ใส่ PIN ผิดหลายครั้ง ลองใหม่ใน 10 นาที');
+      if (e && e.code === 'bad_token') toLogin(auth === 'ok' ? ERR.bad_token : '');
       else { syncError = errText(e); render(); }
     } finally { refreshing = false; }
-  }
-
-  async function tryPin(p) {
-    pin = p; auth = 'checking'; syncError = ''; lockError = 'checking';
-    render();
-    await refresh();
-    if (auth === 'ok') lockError = '';
   }
 
   /* ---------- render ---------- */
@@ -534,6 +605,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)}
     if (auth !== 'ok') { $('#nav').innerHTML = ''; return; }
     var late = lateCount();
     var items = [['dashboard', 'ภาพรวม'], ['jobs', 'งาน'], ['projects', 'โปรเจกต์']];
+    if (isAdmin()) items.push(['users', 'ผู้ใช้']);
     $('#nav').innerHTML = items.map(function (it) {
       var badge = it[0] === 'jobs' && late ? '<span class="badge" title="งานเกินกำหนด">' + late + '</span>' : '';
       return '<a href="#' + it[0] + '"' + (ui.view === it[0] ? ' aria-current="page"' : '') + '>' + it[1] + badge + '</a>';
@@ -547,22 +619,49 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)}
     $('#banner').textContent = msg;
   }
 
-  function lockHTML() {
-    var err = lockError && lockError !== 'checking' ? lockError : '';
-    return '<div class="card lock"><h1>ใส่ PIN เพื่อเข้าใช้งาน</h1><p class="sub">PIN ตั้งไว้ในสคริปต์ที่เชื่อมกับ Google Sheet</p>' +
-      '<form id="lockForm" novalidate><div class="field"><label for="pin-in">PIN</label>' +
-      '<input type="password" id="pin-in" autocomplete="current-password" maxlength="64"></div>' +
-      '<div class="err" role="alert">' + esc(err) + '</div>' +
-      '<div class="actions"><button type="submit" class="btn primary">เข้าใช้งาน</button></div></form></div>';
+  function loginHTML() {
+    return '<div class="card lock"><h1>เข้าสู่ระบบ</h1><p class="sub">ใส่ชื่อผู้ใช้และ PIN ที่ผู้ดูแลระบบให้ไว้</p>' +
+      '<form id="loginForm" novalidate>' +
+      '<div class="field"><label for="lg-user">ชื่อผู้ใช้</label><input type="text" id="lg-user" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="40" value="' + esc(readUserHint()) + '"></div>' +
+      '<div class="field"><label for="lg-pin">PIN</label><input type="password" id="lg-pin" autocomplete="current-password" maxlength="64"></div>' +
+      '<div class="err" id="lg-err" role="alert">' + esc(lockError) + '</div>' +
+      '<div class="actions"><button type="submit" class="btn primary" id="lg-btn">เข้าสู่ระบบ</button></div></form></div>';
+  }
+
+  function setupHTML() {
+    return '<div class="card lock wide"><h1>ตั้งค่าครั้งแรก</h1>' +
+      '<p class="sub">สร้างบัญชีผู้ดูแลระบบ (Admin) ของคุณ แล้วค่อยเพิ่มผู้ใช้คนอื่นได้ในเมนู "ผู้ใช้"</p>' +
+      '<form id="setupForm" novalidate>' +
+      '<div class="field"><label for="su-key">รหัสตั้งค่า</label><input type="password" id="su-key" autocomplete="off" maxlength="64"><div class="hint">ใส่ PIN เดิมที่เคยใช้เข้าระบบ เพื่อยืนยันว่าเป็นเจ้าของระบบ</div></div>' +
+      '<div class="two">' +
+        '<div class="field"><label for="su-user">ชื่อผู้ใช้</label><input type="text" id="su-user" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="24" placeholder="เช่น nattira"><div class="hint">a-z ตัวเลข . _ - ใช้ตอนเข้าสู่ระบบ</div></div>' +
+        '<div class="field"><label for="su-name">ชื่อที่แสดง</label><input type="text" id="su-name" autocomplete="name" maxlength="60" placeholder="เช่น Nattira Tharator"></div>' +
+      '</div>' +
+      '<div class="two">' +
+        '<div class="field"><label for="su-pin">PIN ใหม่ของคุณ</label><input type="password" id="su-pin" autocomplete="new-password" maxlength="64"><div class="hint">อย่างน้อย 6 ตัว</div></div>' +
+        '<div class="field"><label for="su-pin2">ยืนยัน PIN</label><input type="password" id="su-pin2" autocomplete="new-password" maxlength="64"></div>' +
+      '</div>' +
+      '<div class="err" id="su-err" role="alert"></div>' +
+      '<div class="actions"><button type="submit" class="btn primary" id="su-btn">สร้างบัญชีผู้ดูแลระบบ</button></div></form></div>';
   }
 
   function checkingHTML() {
     if (syncError) {
       return '<div class="card empty"><p>เชื่อมต่อ Google Sheet ไม่ได้: ' + esc(syncError) + '</p>' +
         '<div class="actions" style="justify-content:center"><button type="button" class="btn primary" data-action="retry">ลองใหม่</button>' +
-        '<button type="button" class="btn" data-action="lock">ใส่ PIN ใหม่</button></div></div>';
+        (token ? '<button type="button" class="btn" data-action="logout">ออกจากระบบ</button>' : '') + '</div></div>';
     }
     return '<p class="loading">กำลังโหลดข้อมูล…</p>';
+  }
+
+  function renderUser() {
+    var box = $('#userBox');
+    if (!box) return;
+    if (auth !== 'ok' || !me) { box.innerHTML = ''; return; }
+    box.innerHTML = '<button type="button" class="user-btn" data-action="account" aria-label="บัญชีของฉัน" title="บัญชีของฉัน">' +
+      '<span class="avatar" aria-hidden="true">' + esc(String(me.name || '?').trim().charAt(0).toUpperCase()) + '</span>' +
+      '<div><div class="user-name">' + esc(me.name) + '</div><div class="user-role">' + (isAdmin() ? 'Admin' : 'สมาชิก') + '</div></div></button>' +
+      '<button type="button" class="icon-btn" data-action="logout" aria-label="ออกจากระบบ" title="ออกจากระบบ">' + ICON.out + '</button>';
   }
 
   function render() {
@@ -572,14 +671,23 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)}
     var ss = kid ? keep.selectionStart : null;
     var se = kid ? keep.selectionEnd : null;
 
+    if (ui.view === 'users' && auth === 'ok' && !isAdmin()) ui.view = 'dashboard';
     renderNav();
+    renderUser();
     renderBanner();
     document.body.classList.toggle('is-locked', auth !== 'ok');
-    $('#main').innerHTML = auth === 'locked' ? lockHTML()
-      : auth !== 'ok' ? checkingHTML()
-      : ui.view === 'jobs' ? viewJobs() : ui.view === 'projects' ? viewProjects() : viewDashboard();
+    var keepForm = (auth === 'login' && document.getElementById('loginForm')) || (auth === 'setup' && document.getElementById('setupForm'));
+    if (!keepForm || syncError) {
+      $('#main').innerHTML = auth === 'login' ? loginHTML()
+        : auth === 'setup' ? setupHTML()
+        : auth !== 'ok' ? checkingHTML()
+        : ui.view === 'jobs' ? viewJobs() : ui.view === 'projects' ? viewProjects() : ui.view === 'users' ? viewUsers() : viewDashboard();
+    }
 
-    if (auth === 'locked' && !kid) { var pi = document.getElementById('pin-in'); if (pi) pi.focus(); }
+    if (!kid && (auth === 'login' || auth === 'setup') && !modalOpen()) {
+      var fi = document.getElementById(auth === 'login' ? (readUserHint() ? 'lg-pin' : 'lg-user') : 'su-key');
+      if (fi) fi.focus();
+    }
     if (kid) {
       var el = document.getElementById(kid);
       if (el) {
@@ -614,7 +722,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)}
   function viewDashboard() {
     var now = today();
     var dateStr = now.getDate() + ' ' + MON_L[now.getMonth()] + ' ' + now.getFullYear();
-    var head = '<div class="page-head"><div><h1>ภาพรวม</h1><p class="sub">วันนี้ ' + dateStr + '</p></div>' +
+    var head = '<div class="page-head"><div><h1>ภาพรวม</h1><p class="sub">วันนี้ ' + dateStr + (isAdmin() ? ' · งานของทุกคน' : ' · เฉพาะงานของคุณ') + '</p></div>' +
       '<button type="button" class="btn primary" data-action="add">' + ICON.plus + 'เพิ่ม</button></div>';
 
     if (!jobs.length) {
@@ -790,7 +898,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)}
   }
 
   function chartsHTML() {
-    return '<div class="charts">' + weeklyChart() + ownerChart() + diffChart() + projectChart() + '</div>';
+    return '<div class="charts">' + weeklyChart() + (isAdmin() ? ownerChart() : '') + diffChart() + projectChart() + '</div>';
   }
 
   /* hover / focus tooltip shared by every chart mark */
@@ -851,6 +959,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)}
       if (ui.status === 'late') { if (!isLate(j)) return false; }
       else if (ui.status === 'urgent') { if (!(isUrgent(j) && isOpen(j))) return false; }
       else if (ui.status !== 'all' && j.status !== ui.status) return false;
+      if (ui.owner !== 'all' && j.ownerId !== ui.owner) return false;
       if (ui.project !== 'all') {
         var pid = j.projectId || '';
         if (ui.project === 'none' ? pid !== '' : pid !== ui.project) return false;
@@ -911,6 +1020,11 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)}
       projects.slice().sort(function (a, b) { return String(a.name).localeCompare(String(b.name), 'th'); }).map(function (p) {
         return '<option value="' + esc(p.id) + '"' + (ui.project === p.id ? ' selected' : '') + '>' + esc(p.name) + '</option>';
       }).join('');
+    var ownerSel = '';
+    if (isAdmin()) {
+      ownerSel = '<select class="f" id="ownerSel" aria-label="กรองตามผู้รับผิดชอบ"><option value="all"' + (ui.owner === 'all' ? ' selected' : '') + '>ทุกคน</option>' +
+        users.map(function (u) { return '<option value="' + esc(u.id) + '"' + (ui.owner === u.id ? ' selected' : '') + '>' + esc(u.name) + (u.active === 'yes' ? '' : ' (ปิดใช้งาน)') + '</option>'; }).join('') + '</select>';
+    }
     var sortOpts = [['deadline', 'เรียงตามกำหนดส่ง'], ['difficulty', 'เรียงตามความยาก'], ['new', 'เพิ่มล่าสุดก่อน']].map(function (o) {
       return '<option value="' + o[0] + '"' + (ui.sort === o[0] ? ' selected' : '') + '>' + o[1] + '</option>';
     }).join('');
@@ -928,7 +1042,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)}
       '<button type="button" class="btn primary" data-action="add-job">' + ICON.plus + 'เพิ่มงาน</button></div>' +
       '<div class="toolbar">' +
         '<input type="search" id="q" placeholder="ค้นหาชื่องาน ผู้รับผิดชอบ หมายเหตุ" value="' + esc(ui.q) + '" aria-label="ค้นหางาน">' +
-        '<select class="f" id="projSel" aria-label="กรองตามโปรเจกต์">' + projOpts + '</select>' +
+        '<select class="f" id="projSel" aria-label="กรองตามโปรเจกต์">' + projOpts + '</select>' + ownerSel +
         '<select class="f" id="sortSel" aria-label="เรียงลำดับ">' + sortOpts + '</select>' +
       '</div>' + chipHtml + body;
   }
@@ -948,8 +1062,10 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)}
         '<button type="button" class="icon-btn" data-action="edit-job" data-id="' + esc(j.id) + '" aria-label="แก้ไขงาน ' + esc(j.title) + '">' + ICON.edit + '</button></span></li>';
     }).join('');
     return '<section class="card proj"><div class="card-h"><div style="min-width:0"><h2>' + esc(p.name) + '</h2>' + (p.note ? '<p class="note">' + esc(p.note) + '</p>' : '') + '</div>' +
-      '<div class="job-actions"><button type="button" class="icon-btn" data-action="edit-project" data-id="' + esc(p.id) + '" aria-label="แก้ไขโปรเจกต์ ' + esc(p.name) + '">' + ICON.edit + '</button>' +
-      '<button type="button" class="icon-btn del" data-action="del-project" data-id="' + esc(p.id) + '" aria-label="ลบโปรเจกต์ ' + esc(p.name) + '">' + ICON.trash + '</button></div></div>' +
+      (canEditProject(p)
+        ? '<div class="job-actions"><button type="button" class="icon-btn" data-action="edit-project" data-id="' + esc(p.id) + '" aria-label="แก้ไขโปรเจกต์ ' + esc(p.name) + '">' + ICON.edit + '</button>' +
+          '<button type="button" class="icon-btn del" data-action="del-project" data-id="' + esc(p.id) + '" aria-label="ลบโปรเจกต์ ' + esc(p.name) + '">' + ICON.trash + '</button></div>'
+        : '') + '</div>' +
       '<div class="prog" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pct + '" aria-label="ความคืบหน้า ' + esc(p.name) + '"><span style="width:' + pct + '%"></span></div>' +
       '<div class="proj-stats">' + stats + '</div>' +
       (items ? '<ul class="proj-jobs">' + items + '</ul>' : '') +
@@ -971,6 +1087,114 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)}
     }
     var sorted = projects.slice().sort(function (a, b) { return String(b.createdAt || '').localeCompare(String(a.createdAt || '')); });
     return head + '<div class="grid2">' + sorted.map(projectCard).join('') + orphanCard + '</div>';
+  }
+
+  /* ----- users (admin) ----- */
+  function viewUsers() {
+    var act = activeUsers().length;
+    var full = act >= maxUsers;
+    var head = '<div class="page-head"><div><h1>ผู้ใช้</h1><p class="sub">ใช้งานอยู่ ' + act + ' จาก ' + maxUsers + ' คน</p></div>' +
+      '<button type="button" class="btn primary" data-action="add-user"' + (full ? ' disabled title="ผู้ใช้ครบแล้ว ปิดใช้งานคนอื่นก่อน"' : '') + '>' + ICON.plus + 'เพิ่มผู้ใช้</button></div>';
+    var note = '<div class="card note-card">สมาชิกเห็นและแก้ไขได้เฉพาะงานของตัวเอง ผู้ดูแลระบบ (Admin) เห็นทุกงาน มอบหมายผู้รับผิดชอบ และจัดการผู้ใช้ได้ ' +
+      'PIN เก็บแบบเข้ารหัสในสคริปต์ ไม่อยู่ใน Google Sheet</div>';
+    var rows = users.slice().sort(function (a, b) {
+      return (b.active === 'yes') - (a.active === 'yes') || (b.role === 'admin') - (a.role === 'admin') || String(a.name).localeCompare(String(b.name), 'th');
+    }).map(function (u) {
+      var mine = jobs.filter(function (j) { return j.ownerId === u.id; });
+      var open = mine.filter(isOpen).length;
+      var late = mine.filter(isLate).length;
+      var meta = 'งานทั้งหมด ' + mine.length + ' · ค้าง ' + open + (late ? ' · เกินกำหนด ' + late : '');
+      return '<div class="urow' + (u.active === 'yes' ? '' : ' off') + '">' +
+        '<span class="avatar" aria-hidden="true">' + esc(String(u.name || '?').trim().charAt(0).toUpperCase()) + '</span>' +
+        '<div style="min-width:0"><div><b>' + esc(u.name) + '</b><span class="role">' + (u.role === 'admin' ? 'Admin' : 'สมาชิก') + '</span>' +
+          (u.active === 'yes' ? '' : '<span class="role off">ปิดใช้งาน</span>') + (me && u.id === me.id ? '<span class="role off">คุณ</span>' : '') + '</div>' +
+        '<div class="un">@' + esc(u.username) + '</div><div class="meta">' + meta + '</div></div>' +
+        '<button type="button" class="icon-btn" data-action="edit-user" data-id="' + esc(u.id) + '" aria-label="แก้ไขผู้ใช้ ' + esc(u.name) + '">' + ICON.edit + '</button></div>';
+    }).join('');
+    return head + note + '<div class="ulist">' + rows + '</div>';
+  }
+
+  function openUserModal(u) {
+    var x = u || { username: '', name: '', role: 'member', active: 'yes' };
+    var self = !!u && !!me && u.id === me.id;
+    var dis = self ? ' disabled' : '';
+    openModal('<h2 id="mT">' + (u ? 'แก้ไขผู้ใช้' : 'เพิ่มผู้ใช้ใหม่') + '</h2>' +
+      '<form id="userForm" data-id="' + esc(u ? u.id : '') + '" novalidate>' +
+        '<div class="two">' +
+          '<div class="field"><label for="u-name">ชื่อที่แสดง <span class="req">*</span></label><input type="text" id="u-name" data-first value="' + esc(x.name) + '" maxlength="60" placeholder="เช่น สมชาย"></div>' +
+          '<div class="field"><label for="u-user">ชื่อผู้ใช้ <span class="req">*</span></label><input type="text" id="u-user" autocapitalize="none" spellcheck="false" value="' + esc(x.username) + '" maxlength="24" placeholder="เช่น somchai"><div class="hint">a-z ตัวเลข . _ - ใช้ตอนเข้าสู่ระบบ</div></div>' +
+        '</div>' +
+        '<div class="field" role="radiogroup" aria-labelledby="l-role"><span class="lbl" id="l-role">สิทธิ์</span><div class="seg two">' +
+          '<label class="seg-o"><input type="radio" name="role" value="member"' + (x.role === 'admin' ? '' : ' checked') + dis + '><span>สมาชิก (เห็นเฉพาะงานตัวเอง)</span></label>' +
+          '<label class="seg-o"><input type="radio" name="role" value="admin"' + (x.role === 'admin' ? ' checked' : '') + dis + '><span>Admin (เห็นทั้งหมด)</span></label>' +
+        '</div></div>' +
+        '<div class="field"><label for="u-pin">' + (u ? 'ตั้ง PIN ใหม่ <span class="opt">(เว้นว่างถ้าไม่เปลี่ยน)</span>' : 'PIN เริ่มต้น <span class="req">*</span>') + '</label>' +
+          '<input type="password" id="u-pin" autocomplete="new-password" maxlength="64"><div class="hint">อย่างน้อย 6 ตัว' + (u ? ' · ตั้ง PIN ใหม่แล้วผู้ใช้จะถูกออกจากระบบทุกเครื่อง' : ' · บอก PIN ให้ผู้ใช้เอง ผู้ใช้เปลี่ยนเองได้ที่ "บัญชีของฉัน"') + '</div></div>' +
+        (u ? '<label class="check" style="margin-bottom:14px"><input type="checkbox" id="u-active"' + (x.active === 'yes' ? ' checked' : '') + dis + '><span>เปิดใช้งาน' + (self ? ' (ปิดบัญชีตัวเองไม่ได้)' : '') + '</span></label>' : '') +
+        '<div class="err" id="u-err" role="alert"></div>' +
+        '<div class="actions"><button type="button" class="btn" data-action="close-modal">ยกเลิก</button><button type="submit" class="btn primary" id="saveBtn">บันทึก</button></div>' +
+      '</form>');
+  }
+
+  async function submitUser(form) {
+    var id = form.getAttribute('data-id');
+    var err = $('#u-err');
+    var name = $('#u-name').value.trim(), username = $('#u-user').value.trim().toLowerCase(), pinv = $('#u-pin').value;
+    err.textContent = '';
+    if (!name) { err.textContent = ERR.bad_name; $('#u-name').focus(); return; }
+    if (!/^[a-z0-9._-]{2,24}$/.test(username)) { err.textContent = ERR.bad_username; $('#u-user').focus(); return; }
+    if ((!id || pinv) && pinv.trim().length < 6) { err.textContent = ERR.weak_pin; $('#u-pin').focus(); return; }
+    var roleEl = form.querySelector('input[name="role"]:checked');
+    var payload = { id: id || undefined, name: name, username: username, role: roleEl ? roleEl.value : 'member' };
+    if (pinv) payload.pin = pinv;
+    var act = $('#u-active');
+    if (id && act && !act.disabled) payload.active = act.checked;
+    var btn = $('#saveBtn'); btn.disabled = true;
+    try {
+      var res = await api('userSave', payload);
+      users = res.users;
+      var mine = userById(me.id); if (mine) me = mine;
+      lastSig = '';
+      closeModal(); toast(id ? 'บันทึกผู้ใช้แล้ว' : 'เพิ่มผู้ใช้แล้ว');
+      render(); refresh();
+    } catch (e) {
+      if (e && e.code === 'bad_token') { toLogin(ERR.bad_token); return; }
+      err.textContent = errText(e); btn.disabled = false;
+    }
+  }
+
+  function openAccountModal() {
+    if (!me) return;
+    openModal('<h2 id="mT">บัญชีของฉัน</h2>' +
+      '<div class="acct"><span class="avatar" aria-hidden="true">' + esc(String(me.name || '?').trim().charAt(0).toUpperCase()) + '</span>' +
+      '<div><b>' + esc(me.name) + '</b><span class="role">' + (isAdmin() ? 'Admin' : 'สมาชิก') + '</span><div class="hint">@' + esc(me.username) + (isAdmin() ? ' · เห็นงานของทุกคน' : ' · เห็นเฉพาะงานของตัวเอง') + '</div></div></div>' +
+      '<hr class="sep"><h3 style="font-size:15px;margin-bottom:10px">เปลี่ยน PIN</h3>' +
+      '<form id="pinForm" novalidate>' +
+        '<div class="field"><label for="pc-old">PIN เดิม</label><input type="password" id="pc-old" data-first autocomplete="current-password" maxlength="64"></div>' +
+        '<div class="two">' +
+          '<div class="field"><label for="pc-new">PIN ใหม่</label><input type="password" id="pc-new" autocomplete="new-password" maxlength="64"><div class="hint">อย่างน้อย 6 ตัว</div></div>' +
+          '<div class="field"><label for="pc-new2">ยืนยัน PIN ใหม่</label><input type="password" id="pc-new2" autocomplete="new-password" maxlength="64"></div>' +
+        '</div>' +
+        '<div class="err" id="pc-err" role="alert"></div>' +
+        '<div class="actions"><button type="button" class="btn" data-action="close-modal">ปิด</button><button type="button" class="btn" data-action="logout">' + ICON.out + 'ออกจากระบบ</button><button type="submit" class="btn primary" id="saveBtn">เปลี่ยน PIN</button></div>' +
+      '</form>');
+  }
+
+  async function submitPin() {
+    var err = $('#pc-err');
+    var o = $('#pc-old').value, n = $('#pc-new').value, n2 = $('#pc-new2').value;
+    err.textContent = '';
+    if (!o) { err.textContent = 'ใส่ PIN เดิมก่อน'; $('#pc-old').focus(); return; }
+    if (n.trim().length < 6) { err.textContent = ERR.weak_pin; $('#pc-new').focus(); return; }
+    if (n !== n2) { err.textContent = 'PIN ใหม่ทั้งสองช่องไม่ตรงกัน'; $('#pc-new2').focus(); return; }
+    var btn = $('#saveBtn'); btn.disabled = true;
+    try {
+      await api('changePin', { oldPin: o, newPin: n });
+      closeModal(); toast('เปลี่ยน PIN แล้ว เครื่องอื่นจะถูกออกจากระบบ');
+    } catch (e) {
+      if (e && e.code === 'bad_token') { toLogin(ERR.bad_token); return; }
+      err.textContent = errText(e); btn.disabled = false;
+    }
   }
 
   /* ---------- modals ---------- */
@@ -1005,10 +1229,24 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)}
     var d = today(); d.setDate(d.getDate() + (asUrgent ? 1 : 7));
     var j = job || { title: '', projectId: presetProject || '', owner: '', collaborators: '', deadline: ymd(d), difficulty: 'ปานกลาง', status: 'รอทำ', note: '', urgent: asUrgent ? URGENT : '' };
     var names = [];
+    users.forEach(function (u) { if (u.active === 'yes' && names.indexOf(u.name) < 0) names.push(u.name); });
     jobs.forEach(function (x) {
-      [x.owner].concat(splitList(x.collaborators)).forEach(function (n) { if (n && names.indexOf(n) < 0) names.push(n); });
+      splitList(x.collaborators).forEach(function (n) { if (n && names.indexOf(n) < 0) names.push(n); });
     });
-    ['IT', 'PD'].forEach(function (n) { if (names.indexOf(n) < 0) names.push(n); });
+    var ownerField;
+    if (isAdmin()) {
+      var curOwner = j.ownerId || (me ? me.id : '');
+      var ownerOpts = users.filter(function (u) { return u.active === 'yes' || u.id === curOwner; }).map(function (u) {
+        return '<option value="' + esc(u.id) + '"' + (u.id === curOwner ? ' selected' : '') + '>' + esc(u.name) + (u.active === 'yes' ? '' : ' (ปิดใช้งาน)') + '</option>';
+      }).join('');
+      ownerField = '<div class="field"><label for="f-owner">ผู้รับผิดชอบ</label><select class="f" id="f-owner">' + ownerOpts + '</select></div>';
+    } else {
+      ownerField = '<div class="field"><label for="f-owner">ผู้รับผิดชอบ</label><input type="text" id="f-owner" class="ro" value="' + esc(me ? me.name : '') + '" readonly aria-readonly="true"><div class="hint">งานที่คุณสร้างเป็นงานของคุณ</div></div>';
+    }
+    var stamp = job && (job.createdBy || job.updatedBy)
+      ? '<p class="stamp">สร้างโดย ' + esc(job.createdBy || '–') + (job.createdAt ? ' · ' + esc(fmtStamp(job.createdAt)) : '') +
+        (job.updatedBy ? ' · แก้ไขล่าสุดโดย ' + esc(job.updatedBy) + (job.updatedAt ? ' · ' + esc(fmtStamp(job.updatedAt)) : '') : '') + '</p>'
+      : '';
     var projOpts = '<option value="">งานเดี่ยว (ไม่อยู่ในโปรเจกต์)</option>' + projects.slice().sort(function (a, b) { return String(a.name).localeCompare(String(b.name), 'th'); }).map(function (p) {
       return '<option value="' + esc(p.id) + '"' + (p.id === j.projectId ? ' selected' : '') + '>' + esc(p.name) + '</option>';
     }).join('');
@@ -1025,8 +1263,8 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)}
         '</div></div>' +
         '<div class="field"><label for="f-project">อยู่ในโปรเจกต์ <span class="opt">(ไม่บังคับ)</span></label><select class="f" id="f-project">' + projOpts + '</select><div class="hint">เลือกเมื่องานนี้เป็นส่วนหนึ่งของโปรเจกต์ ถ้าเป็นงานเดี่ยวปล่อยไว้ตามเดิม</div></div>' +
         '<div class="two">' +
-          '<div class="field"><label for="f-owner">ผู้รับผิดชอบ</label><input type="text" id="f-owner" list="dl-names" value="' + esc(j.owner) + '" maxlength="80" placeholder="เช่น IT"></div>' +
-          '<div class="field"><label for="f-collab">ผู้ร่วมงาน</label><input type="text" id="f-collab" list="dl-names" value="' + esc(j.collaborators) + '" maxlength="160" placeholder="เช่น PD"><div class="hint">คั่นหลายคนด้วยเครื่องหมายจุลภาค</div></div>' +
+          ownerField +
+          '<div class="field"><label for="f-collab">ผู้ร่วมงาน</label><input type="text" id="f-collab" list="dl-names" value="' + esc(j.collaborators) + '" maxlength="160" placeholder="เช่น PD"><div class="hint">คั่นหลายคนด้วยเครื่องหมายจุลภาค ใช้เป็นป้ายชื่อเท่านั้น ไม่ให้สิทธิ์ดูงาน</div></div>' +
         '</div>' +
         '<datalist id="dl-names">' + names.map(function (n) { return '<option value="' + esc(n) + '">'; }).join('') + '</datalist>' +
         '<div class="two">' +
@@ -1034,7 +1272,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)}
           '<div class="field"><label for="f-status">สถานะ</label><select class="f" id="f-status">' + optionList(STATUS.map(function (s) { return s.key; }), j.status) + '</select></div>' +
         '</div>' +
         '<div class="field" role="radiogroup" aria-labelledby="l-diff"><span class="lbl" id="l-diff">ความยาก</span><div class="seg">' + seg + '</div></div>' +
-        '<div class="field"><label for="f-note">หมายเหตุ</label><textarea id="f-note" maxlength="1000">' + esc(j.note) + '</textarea></div>' +
+        '<div class="field"><label for="f-note">หมายเหตุ</label><textarea id="f-note" maxlength="1000">' + esc(j.note) + '</textarea></div>' + stamp +
         '<div class="actions"><button type="button" class="btn" data-action="close-modal">ยกเลิก</button><button type="submit" class="btn primary" id="saveBtn">บันทึก</button></div>' +
       '</form>');
   }
@@ -1055,16 +1293,15 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)}
     var data = {
       title: title,
       projectId: $('#f-project').value,
-      owner: $('#f-owner').value.trim(),
       collaborators: $('#f-collab').value.trim(),
       deadline: deadline,
       difficulty: diffEl ? diffEl.value : 'ปานกลาง',
       status: status,
       note: $('#f-note').value.trim(),
       urgent: (form.querySelector('input[name="urg"]:checked') || {}).value || '',
-      createdAt: existing && existing.createdAt ? existing.createdAt : new Date().toISOString(),
       doneAt: status === DONE ? ((existing && existing.doneAt) || new Date().toISOString()) : ''
     };
+    if (isAdmin()) data.ownerId = $('#f-owner').value;
     var btn = $('#saveBtn'); btn.disabled = true;
     var ok = await safe(async function () {
       var res = await api('upsert', { table: 'jobs', row: id ? Object.assign({ id: id }, data) : data });
@@ -1090,7 +1327,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)}
     if (!name) { $('#p-name').focus(); return; }
     var id = form.getAttribute('data-id');
     var existing = projById(id);
-    var data = { name: name, note: $('#p-note').value.trim(), createdAt: existing && existing.createdAt ? existing.createdAt : new Date().toISOString() };
+    var data = { name: name, note: $('#p-note').value.trim() };
     var btn = $('#saveBtn'); btn.disabled = true;
     var ok = await safe(async function () {
       var res = await api('upsert', { table: 'projects', row: id ? Object.assign({ id: id }, data) : data });
@@ -1105,6 +1342,43 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)}
       '<div class="actions"><button type="button" class="btn" data-action="close-modal" data-first>ยกเลิก</button><button type="button" class="btn danger" data-action="confirm-ok">' + esc(okLabel) + '</button></div>');
   }
 
+  /* ---------- sign-in ---------- */
+  async function doLogin() {
+    var err = $('#lg-err'), btn = $('#lg-btn');
+    var u = $('#lg-user').value.trim(), p = $('#lg-pin').value;
+    lockError = '';
+    if (!u || !p) { err.textContent = 'ใส่ชื่อผู้ใช้และ PIN ก่อน'; return; }
+    err.textContent = ''; btn.disabled = true;
+    try {
+      var res = await api('login', { username: u, pin: p });
+      signedIn(res, u.toLowerCase());
+    } catch (e) {
+      err.textContent = errText(e); btn.disabled = false;
+      $('#lg-pin').value = ''; $('#lg-pin').focus();
+    }
+  }
+
+  async function doSetup() {
+    var err = $('#su-err'), btn = $('#su-btn');
+    var key = $('#su-key').value, u = $('#su-user').value.trim().toLowerCase(), nm = $('#su-name').value.trim();
+    var p = $('#su-pin').value, p2 = $('#su-pin2').value;
+    err.textContent = '';
+    if (!key) { err.textContent = 'ใส่รหัสตั้งค่า (PIN เดิม) ก่อน'; $('#su-key').focus(); return; }
+    if (!/^[a-z0-9._-]{2,24}$/.test(u)) { err.textContent = ERR.bad_username; $('#su-user').focus(); return; }
+    if (!nm) { err.textContent = ERR.bad_name; $('#su-name').focus(); return; }
+    if (p.trim().length < 6) { err.textContent = ERR.weak_pin; $('#su-pin').focus(); return; }
+    if (p !== p2) { err.textContent = 'PIN ใหม่ทั้งสองช่องไม่ตรงกัน'; $('#su-pin2').focus(); return; }
+    btn.disabled = true;
+    try {
+      var res = await api('setup', { key: key, username: u, name: nm, pin: p });
+      signedIn(res, u);
+      toast('สร้างบัญชีผู้ดูแลระบบแล้ว');
+    } catch (e) {
+      if (e && e.code === 'already_setup') { lockError = ERR.already_setup; loadMode(); return; }
+      err.textContent = errText(e); btn.disabled = false;
+    }
+  }
+
   /* ---------- events ---------- */
   function findJob(id) { for (var i = 0; i < jobs.length; i++) if (jobs[i].id === id) return jobs[i]; return null; }
 
@@ -1116,9 +1390,9 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)}
     var a = el.getAttribute('data-action');
     var id = el.getAttribute('data-id');
 
-    if (a === 'go-status') { ui.status = el.getAttribute('data-status'); ui.project = 'all'; ui.q = ''; location.hash = 'jobs'; if (ui.view === 'jobs') render(); }
+    if (a === 'go-status') { ui.status = el.getAttribute('data-status'); ui.project = 'all'; ui.owner = 'all'; ui.q = ''; location.hash = 'jobs'; if (ui.view === 'jobs') render(); }
     else if (a === 'filter-status') { ui.status = el.getAttribute('data-status'); render(); }
-    else if (a === 'clear-filters') { ui.status = 'all'; ui.project = 'all'; ui.q = ''; render(); }
+    else if (a === 'clear-filters') { ui.status = 'all'; ui.project = 'all'; ui.owner = 'all'; ui.q = ''; render(); }
     else if (a === 'add') openTypeChooser();
     else if (a === 'add-job') openJobModal(null, el.getAttribute('data-project') || '', el.getAttribute('data-urgent') === '1');
     else if (a === 'edit-job') { var j = findJob(id); if (j) openJobModal(j); }
@@ -1153,8 +1427,11 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)}
     }
     else if (a === 'confirm-ok') { var fn = pendingConfirm; if (fn) { el.disabled = true; fn(); } }
     else if (a === 'close-modal') closeModal();
-    else if (a === 'retry') { syncError = ''; auth = 'checking'; render(); refresh(); }
-    else if (a === 'lock') lockApp('');
+    else if (a === 'retry') { syncError = ''; if (token) { auth = 'checking'; render(); refresh(); } else loadMode(); }
+    else if (a === 'logout') logout();
+    else if (a === 'account') openAccountModal();
+    else if (a === 'add-user') { if (isAdmin()) openUserModal(null); }
+    else if (a === 'edit-user') { var eu = userById(id); if (eu && isAdmin()) openUserModal(eu); }
     else if (a === 'pick-day') { ui.day = el.getAttribute('data-day'); render(); }
     else if (a === 'cal-prev') { ui.calM--; if (ui.calM < 0) { ui.calM = 11; ui.calY--; } render(); }
     else if (a === 'cal-next') { ui.calM++; if (ui.calM > 11) { ui.calM = 0; ui.calY++; } render(); }
@@ -1174,6 +1451,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)}
         return api('patch', { table: 'jobs', id: id, fields: { status: v, doneAt: doneAt } });
       }, 'เปลี่ยนสถานะเป็น "' + v + '" แล้ว');
     } else if (el.id === 'projSel') { ui.project = el.value; render(); }
+    else if (el.id === 'ownerSel') { ui.owner = el.value; render(); }
     else if (el.id === 'sortSel') { ui.sort = el.value; render(); }
   });
 
@@ -1183,11 +1461,10 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)}
 
   document.addEventListener('submit', function (e) {
     e.preventDefault();
-    if (e.target.id === 'lockForm') {
-      var typed = $('#pin-in').value.trim();
-      if (!typed) { lockError = 'ใส่ PIN ก่อน'; render(); return; }
-      tryPin(typed);
-    }
+    if (e.target.id === 'loginForm') doLogin();
+    else if (e.target.id === 'setupForm') doSetup();
+    else if (e.target.id === 'userForm') submitUser(e.target);
+    else if (e.target.id === 'pinForm') submitPin();
     else if (e.target.id === 'jobForm') submitJob(e.target);
     else if (e.target.id === 'projForm') submitProject(e.target);
   });
@@ -1222,10 +1499,10 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)}
   function init() {
     var n = today();
     ui.calY = n.getFullYear(); ui.calM = n.getMonth(); ui.day = ymd(n);
-    pin = readPin();
-    if (!pin) auth = 'locked';
+    try { localStorage.removeItem(OLD_PIN_KEY); } catch (e) { /* storage blocked */ }
+    token = readTok();
     route();
-    if (pin) refresh();
+    if (token) refresh(); else loadMode();
     setInterval(function () { if (auth === 'ok' && !document.hidden) refresh(); }, POLL_MS);
     document.addEventListener('visibilitychange', function () { if (!document.hidden && auth === 'ok') refresh(); });
   }
