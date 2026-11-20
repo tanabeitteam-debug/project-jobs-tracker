@@ -1256,14 +1256,16 @@ button.pnext:hover{background:var(--line)}
   function projectChart() {
     var byId = {};
     projects.forEach(function (p) { byId[p.id] = { name: p.name, done: 0, total: 0 }; });
-    var none = { name: 'ไม่ได้อยู่ในโปรเจกต์', done: 0, total: 0 };
+    var none = { name: 'งานทั่วไป', done: 0, total: 0 };      // jobs outside any project
+    var urg = { name: 'งานด่วน', done: 0, total: 0 };         // jobs outside any project that are flagged urgent
     jobs.forEach(function (j) {
-      var g = byId[j.projectId] || none;
+      var g = byId[j.projectId] || (isUrgent(j) ? urg : none);
       g.total++;
       if (j.status === DONE) g.done++;
     });
     var rows = projects.map(function (p) { return byId[p.id]; }).filter(function (g) { return g.total > 0; });
     if (none.total) rows.push(none);
+    if (urg.total) rows.push(urg);
     rows.sort(function (a, b) { return (b.total - b.done) - (a.total - a.done); });
     var link = '<a class="muted" href="#projects">ดูทั้งหมด</a>';
     var sub = 'งานที่เสร็จแล้วเทียบกับงานทั้งหมด';
